@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { getAgreementHTML } from '@/lib/agreement';
 import { Influencer } from '@/types';
 
-export default function SignPage() {
+function SignPageContent() {
   const { token } = useParams<{ token: string }>();
   const searchParams = useSearchParams();
   const printMode = searchParams.get('print') === '1';
+
   const [influencer, setInfluencer] = useState<Influencer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,6 +30,12 @@ export default function SignPage() {
         setLoading(false);
       });
   }, [token]);
+
+  useEffect(() => {
+    if (printMode && !loading && influencer) {
+      setTimeout(() => window.print(), 800);
+    }
+  }, [printMode, loading, influencer]);
 
   const handleSign = async () => {
     if (!signedName.trim() || !agreed) return;
@@ -105,16 +112,8 @@ export default function SignPage() {
     agreementDate,
   });
 
-  // Auto-print if in print mode
-  useEffect(() => {
-    if (printMode && !loading && influencer) {
-      setTimeout(() => window.print(), 800);
-    }
-  }, [printMode, loading, influencer]);
-
   return (
     <div className="min-h-screen bg-[#e8e4dc]">
-      {/* Top banner — hidden in print */}
       <div className="bg-[#1a1a1a] text-[#c9a84c] text-center py-3 text-sm font-medium tracking-widest print:hidden flex items-center justify-center gap-4">
         <span>ASTROLOGY MATRIX — CREATOR COLLABORATION AGREEMENT</span>
         <button onClick={() => window.print()}
@@ -124,42 +123,33 @@ export default function SignPage() {
       </div>
 
       <div className="py-8 px-4 print:p-0">
-        {/* Agreement renders as A4 pages */}
-        <div
-          className="print:p-0"
-          dangerouslySetInnerHTML={{ __html: agreementHTML }}
-        />
+        <div className="print:p-0" dangerouslySetInnerHTML={{ __html: agreementHTML }} />
 
-        {/* Signing section — hidden when printing */}
         {influencer.agreement_status !== 'Accepted' && (
-        <div className="max-w-[210mm] mx-auto mt-6 bg-white rounded-2xl shadow-lg p-8 print:hidden">
-          <h3 className="text-lg font-bold text-[#1a1a1a] mb-6">✍️ Sign this Agreement</h3>
-          <div className="space-y-4 max-w-lg">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Type your full name as your digital signature
+          <div className="max-w-[210mm] mx-auto mt-6 bg-white rounded-2xl shadow-lg p-8 print:hidden">
+            <h3 className="text-lg font-bold text-[#1a1a1a] mb-6">✍️ Sign this Agreement</h3>
+            <div className="space-y-4 max-w-lg">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Type your full name as your digital signature
+                </label>
+                <input type="text" value={signedName} onChange={(e) => setSignedName(e.target.value)}
+                  placeholder={influencer.full_name}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#c9a84c] font-serif italic" />
+              </div>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-1 w-4 h-4 accent-[#c9a84c]" />
+                <span className="text-sm text-gray-600">
+                  I have read and understood the entire agreement above. By typing my name and clicking Sign, I agree to be bound by its terms. I confirm this digital signature is legally equivalent to a handwritten signature.
+                </span>
               </label>
-              <input
-                type="text"
-                value={signedName}
-                onChange={(e) => setSignedName(e.target.value)}
-                placeholder={influencer.full_name}
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#c9a84c] font-serif italic"
-              />
+              <button onClick={handleSign} disabled={!signedName.trim() || !agreed || signing}
+                className="w-full bg-[#c9a84c] hover:bg-[#b8963e] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors">
+                {signing ? 'Signing...' : '✦ Sign Agreement'}
+              </button>
             </div>
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-1 w-4 h-4 accent-[#c9a84c]" />
-              <span className="text-sm text-gray-600">
-                I have read and understood the entire agreement above. By typing my name and clicking Sign, I agree to be bound by its terms. I confirm this digital signature is legally equivalent to a handwritten signature.
-              </span>
-            </label>
-            <button onClick={handleSign} disabled={!signedName.trim() || !agreed || signing}
-              className="w-full bg-[#c9a84c] hover:bg-[#b8963e] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors">
-              {signing ? 'Signing...' : '✦ Sign Agreement'}
-            </button>
           </div>
-        </div>
         )}
 
         <p className="text-center text-xs text-gray-400 mt-6 mb-8 print:hidden">
@@ -174,5 +164,17 @@ export default function SignPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function SignPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f9f6f0] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#c9a84c] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <SignPageContent />
+    </Suspense>
   );
 }
