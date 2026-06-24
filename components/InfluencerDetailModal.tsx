@@ -40,6 +40,14 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated }
 
   // Local form state — nothing saves until "Save Changes" is clicked
   const [form, setForm] = useState({
+    // Creator info — editable
+    full_name: influencer.full_name ?? '',
+    email: influencer.email ?? '',
+    phone: influencer.phone ?? '',
+    instagram_handle: influencer.instagram_handle ?? '',
+    followers: influencer.followers ?? 0,
+    address: influencer.address ?? '',
+    // Collaboration
     product_assigned: influencer.product_assigned ?? 'Pyrite Anklet',
     payment_amount: influencer.payment_amount ?? 900,
     agreement_status: influencer.agreement_status ?? 'Pending',
@@ -82,6 +90,12 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated }
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        full_name: form.full_name,
+        email: form.email,
+        phone: form.phone,
+        instagram_handle: form.instagram_handle,
+        followers: form.followers,
+        address: form.address,
         product_assigned: form.product_assigned,
         payment_amount: form.payment_amount,
         agreement_status: form.agreement_status,
@@ -166,18 +180,48 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated }
 
         <div className="p-5 space-y-5 text-gray-900">
 
-          {/* Creator info (read-only) */}
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm bg-gray-50 rounded-xl p-4 border border-gray-100">
-            <div><span className="text-gray-400">Phone:</span> <span className="font-medium ml-1">{influencer.phone}</span></div>
-            <div><span className="text-gray-400">Email:</span> <span className="font-medium ml-1 break-all">{influencer.email}</span></div>
-            <div className="col-span-2"><span className="text-gray-400">Address:</span> <span className="font-medium ml-1">{influencer.address}</span></div>
-            {influencer.agreement_signed_at && (
-              <div className="col-span-2">
-                <span className="text-gray-400">Signed on:</span>
-                <span className="font-medium ml-1 text-green-600">
-                  {new Date(influencer.agreement_signed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </span>
+          {/* Creator info — all editable */}
+          <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">👤 Creator Info</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Full Name</label>
+                <input value={form.full_name} onChange={e => setField('full_name', e.target.value)}
+                  className={inputCls} placeholder="Full Name" />
               </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Phone</label>
+                <input value={form.phone} onChange={e => setField('phone', e.target.value)}
+                  className={inputCls} placeholder="Phone" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Email</label>
+                <input type="text" value={form.email} onChange={e => setField('email', e.target.value)}
+                  className={inputCls} placeholder="Email" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Instagram Handle</label>
+                <div className="flex">
+                  <span className="bg-gray-100 border border-r-0 border-gray-200 rounded-l-lg px-2 py-2 text-xs text-gray-500">@</span>
+                  <input value={form.instagram_handle.replace('@','')} onChange={e => setField('instagram_handle', e.target.value)}
+                    className="flex-1 border border-gray-200 rounded-r-lg px-3 py-2 text-xs text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#c9a84c]" placeholder="handle" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Followers</label>
+                <input type="number" value={form.followers} onChange={e => setField('followers', parseInt(e.target.value)||0)}
+                  className={inputCls} placeholder="Followers" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Address</label>
+                <input value={form.address} onChange={e => setField('address', e.target.value)}
+                  className={inputCls} placeholder="Full address" />
+              </div>
+            </div>
+            {influencer.agreement_signed_at && (
+              <p className="text-xs text-green-600 font-medium">
+                ✓ Signed on {new Date(influencer.agreement_signed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
             )}
           </div>
 
