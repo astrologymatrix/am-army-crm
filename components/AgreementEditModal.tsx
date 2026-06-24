@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Influencer, Product } from '@/types';
 import { X, Send } from 'lucide-react';
 import { getAgreementHTML } from '@/lib/agreement';
@@ -59,7 +59,7 @@ export default function AgreementEditModal({ influencer, onClose, onUpdated }: P
     setSending(false);
   };
 
-  const previewHTML = getAgreementHTML({
+  const previewHTML = useMemo(() => getAgreementHTML({
     creatorName: form.full_name,
     instagramHandle: form.instagram_handle,
     phone: form.phone,
@@ -67,7 +67,7 @@ export default function AgreementEditModal({ influencer, onClose, onUpdated }: P
     product: form.product_assigned,
     paymentAmount: Number(form.payment_amount),
     agreementDate: form.agreementDate,
-  });
+  }), [form]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -92,10 +92,15 @@ export default function AgreementEditModal({ influencer, onClose, onUpdated }: P
                 { label: 'Instagram Handle', key: 'instagram_handle', type: 'text' },
                 { label: 'Phone', key: 'phone', type: 'text' },
                 { label: 'Email', key: 'email', type: 'email' },
-              ].map(({ label, key, type }) => (
+              ].map(({ label, key }) => (
                 <div key={key} className="mb-3">
                   <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-1">{label}</label>
-                  <input type={type} value={(form as any)[key]} onChange={e => set(key, e.target.value)}
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    value={(form as any)[key]}
+                    onChange={e => set(key, e.target.value)}
+                    onInput={e => set(key, (e.target as HTMLInputElement).value)}
                     className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-[#c9a84c]/50" />
                 </div>
               ))}
