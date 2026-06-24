@@ -99,6 +99,11 @@ export default function AgreementEditModal({ influencer, onClose, onUpdated }: P
     product: form.product_assigned,
     paymentAmount: Number(form.payment_amount),
     agreementDate: form.agreementDate,
+    postDays: Number(form.postDays),
+    reelMinSec: Number(form.reelMinSec),
+    reelMaxSec: Number(form.reelMaxSec),
+    reelLiveDays: Number(form.reelLiveDays),
+    nonCompeteDays: Number(form.nonCompeteDays),
   }), [form]);
 
   return (

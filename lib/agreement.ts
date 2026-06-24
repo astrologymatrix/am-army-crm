@@ -1,5 +1,15 @@
 // Generates pixel-perfect agreement HTML matching the official Astrology Matrix PDF
 
+function numberToWords(n: number): string {
+  const words: Record<number, string> = {
+    1:'one',2:'two',3:'three',4:'four',5:'five',6:'six',7:'seven',
+    8:'eight',9:'nine',10:'ten',14:'fourteen',15:'fifteen',20:'twenty',
+    21:'twenty-one',24:'twenty-four',25:'twenty-five',30:'thirty',
+    45:'forty-five',60:'sixty',90:'ninety',
+  };
+  return words[n] ?? String(n);
+}
+
 export function getAgreementHTML({
   creatorName,
   instagramHandle,
@@ -10,6 +20,11 @@ export function getAgreementHTML({
   agreementDate,
   signedName,
   signedDate,
+  postDays = 7,
+  reelMinSec = 30,
+  reelMaxSec = 60,
+  reelLiveDays = 30,
+  nonCompeteDays = 30,
 }: {
   creatorName: string;
   instagramHandle: string;
@@ -20,6 +35,11 @@ export function getAgreementHTML({
   agreementDate: string;
   signedName?: string;
   signedDate?: string;
+  postDays?: number;
+  reelMinSec?: number;
+  reelMaxSec?: number;
+  reelLiveDays?: number;
+  nonCompeteDays?: number;
 }) {
   const handle = instagramHandle.startsWith('@') ? instagramHandle : `@${instagramHandle}`;
   const amountWords = paymentAmount === 900 ? 'Nine Hundred'
@@ -127,10 +147,10 @@ export function getAgreementHTML({
   ${sectionTitle('1', 'SCOPE OF COLLABORATION')}
   ${subTitle('The Creator agrees to create and publish the following content:')}
   <ul>
-    ${bullet('1 (one) Instagram Reel — minimum 30 seconds and maximum 60 seconds (1 minute) in duration, featuring the assigned Astrology Matrix product')}
+    ${bullet(`1 (one) Instagram Reel — minimum ${reelMinSec} seconds and maximum ${reelMaxSec} seconds (${Math.round(reelMaxSec/60)} minute) in duration, featuring the assigned Astrology Matrix product`)}
     ${bullet('1 (one) Instagram Story Share — sharing the Reel or product content to the Creator\'s Story, with a visible tag to @AstrologyMatrix and @AstrologyMatrixStore')}
     ${bullet('Content must be original, authentic, and reflect the Creator\'s genuine experience with the product')}
-    ${bullet('The Reel and Story must go live on the Creator\'s Instagram profile within 7 (seven) days of receiving the product, unless a different deadline is mutually agreed in writing.')}
+    ${bullet(`The Reel and Story must go live on the Creator's Instagram profile within ${postDays} (${numberToWords(postDays)}) days of receiving the product, unless a different deadline is mutually agreed in writing.`)}
   </ul>
 
   ${sectionTitle('2', 'COMPENSATION & PRODUCT')}
@@ -159,11 +179,11 @@ export function getAgreementHTML({
     ${bullet('The product must be clearly visible in both the Reel and the Story Share')}
     ${bullet('The Instagram handle @AstrologyMatrix and @AstrologyMatrixStore must be tagged in both the Reel caption and the Story Share')}
     ${bullet('The hashtag #astrologymatrix or #AMArmy must appear in the Reel caption or Story')}
-    ${bullet('The Reel must be between 30 seconds and 60 seconds (1 minute) in duration')}
+    ${bullet(`The Reel must be between ${reelMinSec} seconds and ${reelMaxSec} seconds (${Math.round(reelMaxSec/60)} minute) in duration`)}
     ${bullet('The Reel must include at least one clear close-up shot of the product')}
     ${bullet('Content must be filmed in good lighting and be visually presentable')}
     ${bullet('The Story must remain live for a minimum of 24 hours')}
-    ${bullet('The Reel must remain live on the Creator\'s profile for a minimum of 30 (thirty) days from the date of posting')}
+    ${bullet(`The Reel must remain live on the Creator's profile for a minimum of ${reelLiveDays} (${numberToWords(reelLiveDays)}) days from the date of posting`)}
     ${bullet('The Creator must not make false medical, therapeutic, or health claims about the product')}
     ${bullet('The Creator must not tag or mention any competitor crystal or spiritual product brand in the same post')}
     ${bullet('Sponsored/gifted disclosure (e.g.#Gifted or #Collab) must be included as per Instagram guidelines and Indian advertising standards')}
@@ -199,7 +219,7 @@ export function getAgreementHTML({
   </ul>
 
   ${sectionTitle('7', 'NON-COMPETE & EXCLUSIVITY')}
-  ${para('During the period of this collaboration and for <strong>30 (thirty) days</strong> after the Reel goes live, the Creator agrees not to create sponsored or gifted content for any direct competitor of Astrology Matrix in the crystal jewellery, spiritual bracelet, or crystal anklet product category, without the Brand\'s prior written consent.')}
+  ${para(`During the period of this collaboration and for <strong>${nonCompeteDays} (${numberToWords(nonCompeteDays)}) days</strong> after the Reel goes live, the Creator agrees not to create sponsored or gifted content for any direct competitor of Astrology Matrix in the crystal jewellery, spiritual bracelet, or crystal anklet product category, without the Brand's prior written consent.`)}
 
   ${sectionTitle('8', 'DEFAULT & CONSEQUENCES')}
   ${para('If the Creator fails to post the required content within the agreed timeframe, or posts content that materially violates these terms:')}
