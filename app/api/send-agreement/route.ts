@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
   }
 
   const token = uuidv4();
-  // Always use the production URL for signing links — never localhost
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || '').replace('http://localhost:3000', 'https://am-army-crm.vercel.app');
+  // Always use production URL — never localhost
+  const appUrl = 'https://am-army-crm.vercel.app';
   const signingLink = `${appUrl}/sign/${token}`;
 
   const { error: updateError } = await db
