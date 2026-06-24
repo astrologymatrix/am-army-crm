@@ -43,7 +43,7 @@ export async function sendAgreementEmail({
 <body>
   <div class="container">
     <div class="header">
-      <img src="${process.env.NEXT_PUBLIC_APP_URL}/logo-white.png" alt="Astrology Matrix" onerror="this.style.display='none'" />
+      <img src="${process.env.NEXT_PUBLIC_APP_URL}/logo.png" alt="Astrology Matrix" style="height:60px;object-fit:contain;" />
       <div style="color:#c9a84c; font-size:22px; font-weight:bold; margin-top:8px;">ASTROLOGY MATRIX</div>
       <div style="color:#888; font-size:13px; letter-spacing:2px; margin-top:4px;">AM ARMY</div>
     </div>
