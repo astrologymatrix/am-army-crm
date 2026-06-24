@@ -35,19 +35,51 @@ export default function AgreementEditModal({ influencer, onClose, onUpdated }: P
 
   const set = (k: string, v: string | number) => setForm(f => ({ ...f, [k]: v }));
 
-  const saveAndSend = async () => {
+  const saveDraft = async () => {
     setSending(true);
     setError('');
-    // First update influencer details if changed
-    await fetch(`/api/influencers/${influencer.id}`, {
+    const res = await fetch(`/api/influencers/${influencer.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        full_name: form.full_name,
+        instagram_handle: form.instagram_handle,
+        phone: form.phone,
+        email: form.email,
         product_assigned: form.product_assigned,
         payment_amount: form.payment_amount,
       }),
     });
-    // Send agreement email
+    if (res.ok) { setSuccess('Saved!'); onUpdated(); }
+    else setError('Save failed');
+    setSending(false);
+  };
+
+  const saveAndSend = async () => {
+    setSending(true);
+    setError('');
+
+    // Save ALL edited fields to DB first
+    const saveRes = await fetch(`/api/influencers/${influencer.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name: form.full_name,
+        instagram_handle: form.instagram_handle,
+        phone: form.phone,
+        email: form.email,
+        product_assigned: form.product_assigned,
+        payment_amount: form.payment_amount,
+      }),
+    });
+
+    if (!saveRes.ok) {
+      setError('Failed to save changes before sending');
+      setSending(false);
+      return;
+    }
+
+    // Send agreement email using updated DB data
     const res = await fetch('/api/send-agreement', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -55,7 +87,7 @@ export default function AgreementEditModal({ influencer, onClose, onUpdated }: P
     });
     const data = await res.json();
     if (!res.ok) setError(data.error || 'Failed to send');
-    else { setSuccess('Agreement sent!'); setTimeout(() => { onUpdated(); onClose(); }, 1500); }
+    else { setSuccess('Saved & sent!'); setTimeout(() => { onUpdated(); onClose(); }, 1500); }
     setSending(false);
   };
 
@@ -171,13 +203,17 @@ export default function AgreementEditModal({ influencer, onClose, onUpdated }: P
           <div className="flex gap-3">
             <button onClick={onClose} className="border border-white/10 text-gray-400 px-5 py-2.5 rounded-xl text-sm hover:bg-white/5 transition-colors">Close</button>
             <button onClick={() => window.print()} className="border border-white/10 text-gray-300 px-5 py-2.5 rounded-xl text-sm hover:bg-white/5 transition-colors">Print / PDF</button>
+            <button onClick={saveDraft} disabled={sending}
+              className="border border-[#c9a84c]/40 text-[#c9a84c] px-5 py-2.5 rounded-xl text-sm hover:bg-[#c9a84c]/10 transition-colors disabled:opacity-50">
+              {sending ? 'Saving...' : 'Save Draft'}
+            </button>
             <button
               onClick={saveAndSend}
               disabled={sending}
               className="flex items-center gap-2 bg-[#c9a84c] hover:bg-[#b8963e] disabled:opacity-50 text-black font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors"
             >
               <Send className="w-4 h-4" />
-              {sending ? 'Sending...' : influencer.agreement_status === 'Accepted' ? 'Agreement Signed ✓' : 'Save & Send for Signature'}
+              {sending ? 'Saving...' : influencer.agreement_status === 'Accepted' ? 'Agreement Signed ✓' : 'Save & Send for Signature'}
             </button>
           </div>
         </div>
