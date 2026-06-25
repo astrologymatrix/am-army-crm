@@ -117,7 +117,7 @@ export default function CreatorsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/5">
-                  {['#', 'Name', 'Phone', 'Email', 'Instagram', 'Followers', 'Address', 'Agreement', '₹', 'Product', 'Video', 'Pay Status', 'Remarks', ''].map(h => (
+                  {['#', 'Name', 'Phone', 'Email', 'Instagram', 'Followers', 'Agreement', '₹', 'Product', 'Video', 'Pay Status', 'Remarks', ''].map(h => (
                     <th key={h} className="px-3 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -137,7 +137,6 @@ export default function CreatorsPage() {
                     <td className="px-3 py-2.5 text-gray-400 text-xs max-w-[130px] truncate">{inf.email}</td>
                     <td className="px-3 py-2.5 text-gray-400 text-xs whitespace-nowrap">@{inf.instagram_handle}</td>
                     <td className="px-3 py-2.5 text-gray-400 text-xs whitespace-nowrap">{inf.followers?.toLocaleString('en-IN')}</td>
-                    <td className="px-3 py-2.5 text-gray-500 text-xs max-w-[110px] truncate">{inf.address || '—'}</td>
                     <td className="px-3 py-2.5"><Badge value={inf.agreement_status} type="agreement" /></td>
                     <td className="px-3 py-2.5 text-gray-300 text-xs whitespace-nowrap">₹{inf.payment_amount?.toLocaleString('en-IN')}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
@@ -153,9 +152,9 @@ export default function CreatorsPage() {
                         ? <span className="text-gray-600 text-xs">—</span>
                         : <Badge value={inf.payment_status} type="payment" />}
                     </td>
-                    <td className="px-3 py-2.5 text-xs max-w-[110px] truncate">
+                    <td className="px-3 py-2.5 text-xs max-w-[160px]">
                       {inf.remarks
-                        ? <span className={inf.remarks.toLowerCase().includes('delivered') ? 'text-green-400' : 'text-gray-400'}>{inf.remarks}</span>
+                        ? <span className={`break-words leading-relaxed ${inf.remarks.toLowerCase().includes('delivered') ? 'text-green-400' : 'text-gray-400'}`}>{inf.remarks}</span>
                         : <span className="text-gray-700">—</span>}
                     </td>
                     <td className="px-3 py-2.5">
