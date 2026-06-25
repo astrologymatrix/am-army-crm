@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Influencer } from '@/types';
-import { Download } from 'lucide-react';
+import { Download, ExternalLink } from 'lucide-react';
 
 const PIPELINE_STAGES = [
   { key: 'Agreement', color: 'border-orange-500/30 bg-orange-500/5' },
@@ -24,6 +24,16 @@ function getPipelineStage(inf: Influencer): string {
   return 'Agreement';
 }
 
+function StatCard({ label, value, sub, gold, loading }: { label: string; value: string | number; sub: string; gold?: boolean; loading: boolean }) {
+  return (
+    <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-5">
+      <p className="text-[10px] font-semibold text-gray-500 tracking-widest uppercase mb-3">{label}</p>
+      <p className={`text-3xl font-light mb-1 ${gold ? 'text-[#c9a84c]' : 'text-white'}`}>{loading ? '—' : value}</p>
+      <p className="text-xs text-gray-600">{sub}</p>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [influencers, setInfluencers] = useState<Influencer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,13 +47,27 @@ export default function Dashboard() {
 
   useEffect(() => { load(); }, [load]);
 
+  const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+
   const stats = {
     total: influencers.length,
     signed: influencers.filter(i => i.agreement_status === 'Accepted').length,
     awaitingSig: influencers.filter(i => ['Pending', 'Sent'].includes(i.agreement_status)).length,
     pendingPayment: influencers.filter(i => i.payment_status === 'Pending').length,
     videosToReview: influencers.filter(i => i.video_status === 'Sent').length,
+    totalPaid: influencers.filter(i => i.payment_status === 'Paid').reduce((s, i) => s + (i.payment_amount || 0), 0),
+    totalPending: influencers.filter(i => i.payment_status === 'Pending').reduce((s, i) => s + (i.payment_amount || 0), 0),
   };
+
+  // Creators with a live video URL
+  const liveVideos = influencers
+    .filter(i => i.video_url)
+    .sort((a, b) => {
+      if (!a.video_posted_at && !b.video_posted_at) return 0;
+      if (!a.video_posted_at) return 1;
+      if (!b.video_posted_at) return -1;
+      return new Date(b.video_posted_at).getTime() - new Date(a.video_posted_at).getTime();
+    });
 
   return (
     <div className="p-8">
@@ -58,21 +82,89 @@ export default function Dashboard() {
         </a>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-5 gap-4 mb-8">
-        {[
-          { label: 'TOTAL CREATORS', value: stats.total, sub: 'AM Army roster' },
-          { label: 'AGREEMENTS SIGNED', value: stats.signed, sub: 'Ready for fulfillment', gold: true },
-          { label: 'AWAITING SIGNATURE', value: stats.awaitingSig, sub: 'Follow up needed' },
-          { label: 'PENDING PAYMENT', value: stats.pendingPayment, sub: 'Marked Pending in payment status', gold: true },
-          { label: 'VIDEOS TO REVIEW', value: stats.videosToReview, sub: 'Approval queue' },
-        ].map(({ label, value, sub, gold }) => (
-          <div key={label} className="bg-[#1a1a1a] border border-white/5 rounded-xl p-5">
-            <p className="text-[10px] font-semibold text-gray-500 tracking-widest uppercase mb-3">{label}</p>
-            <p className={`text-4xl font-light mb-1 ${gold ? 'text-[#c9a84c]' : 'text-white'}`}>{loading ? '—' : value}</p>
-            <p className="text-xs text-gray-600">{sub}</p>
+      {/* Stats row 1 — counts */}
+      <div className="grid grid-cols-5 gap-4 mb-4">
+        <StatCard label="Total Creators" value={stats.total} sub="AM Army roster" loading={loading} />
+        <StatCard label="Agreements Signed" value={stats.signed} sub="Ready for fulfillment" gold loading={loading} />
+        <StatCard label="Awaiting Signature" value={stats.awaitingSig} sub="Follow up needed" loading={loading} />
+        <StatCard label="Pending Payment" value={stats.pendingPayment} sub="Marked as Pending" gold loading={loading} />
+        <StatCard label="Videos to Review" value={stats.videosToReview} sub="Approval queue" loading={loading} />
+      </div>
+
+      {/* Stats row 2 — payment amounts */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="bg-[#1a1a1a] border border-emerald-500/20 rounded-xl p-5 flex items-center gap-5">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+            <span className="text-emerald-400 text-lg">✓</span>
           </div>
-        ))}
+          <div>
+            <p className="text-[10px] font-semibold text-gray-500 tracking-widest uppercase mb-1">Total Amount Paid</p>
+            <p className="text-2xl font-light text-emerald-400">{loading ? '—' : fmt(stats.totalPaid)}</p>
+            <p className="text-xs text-gray-600 mt-0.5">{influencers.filter(i => i.payment_status === 'Paid').length} creators paid</p>
+          </div>
+        </div>
+        <div className="bg-[#1a1a1a] border border-orange-500/20 rounded-xl p-5 flex items-center gap-5">
+          <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+            <span className="text-orange-400 text-lg">⏳</span>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold text-gray-500 tracking-widest uppercase mb-1">Total Amount Pending</p>
+            <p className="text-2xl font-light text-orange-400">{loading ? '—' : fmt(stats.totalPending)}</p>
+            <p className="text-xs text-gray-600 mt-0.5">{stats.pendingPayment} creators pending</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Live Videos */}
+      <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-6 mb-6">
+        <p className="text-xs font-semibold text-[#c9a84c] tracking-widest uppercase mb-5">🎬 Posted & Live Videos</p>
+        {loading ? (
+          <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-14 bg-white/5 rounded-lg animate-pulse" />)}</div>
+        ) : liveVideos.length === 0 ? (
+          <p className="text-gray-600 text-sm">No videos posted yet. Add a video URL from a creator's Edit form.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/5">
+                  {['Creator', 'Product', 'Date Posted', 'Video Link', 'Views', 'Likes', 'Comments', 'Shares'].map(h => (
+                    <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {liveVideos.map(inf => (
+                  <tr key={inf.id} className="hover:bg-white/3 transition-colors">
+                    <td className="px-3 py-3">
+                      <p className="text-white font-semibold text-sm">{inf.full_name}</p>
+                      <a href={`https://instagram.com/${inf.instagram_handle.replace('@','')}`} target="_blank" rel="noreferrer"
+                        className="text-[#c9a84c] text-xs hover:underline">@{inf.instagram_handle}</a>
+                    </td>
+                    <td className="px-3 py-3 text-gray-400 text-xs whitespace-nowrap">
+                      {inf.product_assigned === 'Rose Quartz Bracelet' ? 'Rose Quartz' : 'Pyrite Anklet'}
+                    </td>
+                    <td className="px-3 py-3 text-gray-400 text-xs whitespace-nowrap">
+                      {inf.video_posted_at
+                        ? new Date(inf.video_posted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : <span className="text-gray-600">—</span>}
+                    </td>
+                    <td className="px-3 py-3">
+                      <a href={inf.video_url!} target="_blank" rel="noreferrer"
+                        className="flex items-center gap-1 text-[#c9a84c] hover:text-[#b8963e] text-xs font-medium whitespace-nowrap">
+                        <ExternalLink className="w-3 h-3" /> View Reel
+                      </a>
+                    </td>
+                    {[inf.video_views, inf.video_likes, inf.video_comments, inf.video_shares].map((val, idx) => (
+                      <td key={idx} className="px-3 py-3 text-gray-300 text-sm font-medium">
+                        {val != null ? Number(val).toLocaleString('en-IN') : <span className="text-gray-700">—</span>}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Pipeline Board */}
@@ -88,15 +180,12 @@ export default function Dashboard() {
               const cards = influencers.filter(i => getPipelineStage(i) === key);
               return (
                 <div key={key} className={`rounded-xl border ${color} p-3 flex flex-col`}>
-                  {/* Column header */}
                   <div className="flex items-center justify-between mb-3 flex-shrink-0">
                     <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">{key}</p>
                     <span className="text-xs font-bold text-[#c9a84c] bg-[#c9a84c]/10 rounded-full px-2 py-0.5">
                       {cards.length}
                     </span>
                   </div>
-
-                  {/* Scrollable card list — max 10 visible, then scrolls */}
                   <div
                     className="space-y-2 overflow-y-auto pr-0.5"
                     style={{ maxHeight: cards.length > 10 ? '320px' : 'none' }}
@@ -112,8 +201,6 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-
-                  {/* Scroll hint when overflow */}
                   {cards.length > 10 && (
                     <p className="text-[10px] text-gray-700 text-center mt-2 flex-shrink-0">
                       scroll to see all {cards.length}

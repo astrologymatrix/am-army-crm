@@ -134,7 +134,12 @@ function ViewProfile({ influencer }: { influencer: Influencer }) {
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-xl font-bold text-gray-900">{influencer.full_name}</h3>
-          <p className="text-sm text-[#c9a84c] font-medium">@{influencer.instagram_handle}</p>
+          <a
+            href={`https://instagram.com/${influencer.instagram_handle.replace('@','')}`}
+            target="_blank" rel="noreferrer"
+            className="text-sm text-[#c9a84c] font-medium hover:underline">
+            @{influencer.instagram_handle}
+          </a>
           <p className="text-xs text-gray-500">{Number(influencer.followers || 0).toLocaleString('en-IN')} followers</p>
         </div>
         <div className="flex flex-col items-end gap-1">
@@ -255,6 +260,49 @@ function ViewProfile({ influencer }: { influencer: Influencer }) {
         </div>
       </div>
 
+      {/* Live Video */}
+      <div className="bg-gray-50 rounded-xl p-4">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">🎬 Live Video</p>
+        <div className="space-y-3">
+          <div>
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-0.5">Video URL</span>
+            {influencer.video_url ? (
+              <a href={influencer.video_url} target="_blank" rel="noreferrer"
+                className="text-sm text-[#c9a84c] font-medium hover:underline break-all">
+                {influencer.video_url}
+              </a>
+            ) : <EmptyVal />}
+          </div>
+          {influencer.video_posted_at && (
+            <div>
+              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-0.5">Posted On</span>
+              <span className="text-sm text-gray-800 font-medium">
+                {new Date(influencer.video_posted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </span>
+            </div>
+          )}
+          {(influencer.video_views || influencer.video_likes || influencer.video_comments || influencer.video_shares) ? (
+            <div className="grid grid-cols-4 gap-2 mt-2">
+              {[
+                { label: 'Views', value: influencer.video_views },
+                { label: 'Likes', value: influencer.video_likes },
+                { label: 'Comments', value: influencer.video_comments },
+                { label: 'Shares', value: influencer.video_shares },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-white border border-gray-200 rounded-lg p-2.5 text-center">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-widest">{label}</p>
+                  <p className="text-base font-bold text-gray-800 mt-0.5">
+                    {value != null ? Number(value).toLocaleString('en-IN') : '—'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-300 italic">No stats added yet</p>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }
@@ -282,6 +330,12 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
     bank_details: influencer.bank_details ?? '',
     payment_scanner_url: influencer.payment_scanner_url ?? '',
     payment_screenshot_url: influencer.payment_screenshot_url ?? '',
+    video_url: influencer.video_url ?? '',
+    video_posted_at: influencer.video_posted_at ? influencer.video_posted_at.slice(0, 10) : '',
+    video_views: influencer.video_views ?? '',
+    video_likes: influencer.video_likes ?? '',
+    video_comments: influencer.video_comments ?? '',
+    video_shares: influencer.video_shares ?? '',
     remarks: influencer.remarks ?? '',
   });
 
@@ -333,6 +387,12 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
         bank_details: form.bank_details || null,
         payment_scanner_url: form.payment_scanner_url || null,
         payment_screenshot_url: form.payment_screenshot_url || null,
+        video_url: form.video_url || null,
+        video_posted_at: form.video_posted_at || null,
+        video_views: form.video_views !== '' ? Number(form.video_views) : null,
+        video_likes: form.video_likes !== '' ? Number(form.video_likes) : null,
+        video_comments: form.video_comments !== '' ? Number(form.video_comments) : null,
+        video_shares: form.video_shares !== '' ? Number(form.video_shares) : null,
         remarks: form.remarks,
       }),
     });
@@ -631,6 +691,38 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
                   onUploaded={url => setField('payment_screenshot_url', url)}
                   onRemoved={() => setField('payment_screenshot_url', '')}
                 />
+              </div>
+            </div>
+
+            {/* Live Video */}
+            <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">🎬 Live Video</p>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Instagram / Reel Video URL</label>
+                <input value={form.video_url} onChange={e => setField('video_url', e.target.value)}
+                  className={inputCls} placeholder="https://www.instagram.com/reel/..." />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Date Posted</label>
+                <input type="date" value={form.video_posted_at} onChange={e => setField('video_posted_at', e.target.value)}
+                  className={inputCls} />
+              </div>
+              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold pt-1">Video Stats</p>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { key: 'video_views', label: 'Views' },
+                  { key: 'video_likes', label: 'Likes' },
+                  { key: 'video_comments', label: 'Comments' },
+                  { key: 'video_shares', label: 'Shares' },
+                ].map(({ key, label }) => (
+                  <div key={key}>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
+                    <input type="number" min="0"
+                      value={(form as any)[key]}
+                      onChange={e => setField(key, e.target.value)}
+                      className={inputCls} placeholder="0" />
+                  </div>
+                ))}
               </div>
             </div>
 
