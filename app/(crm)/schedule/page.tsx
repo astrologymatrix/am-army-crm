@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Influencer } from '@/types';
-import { ChevronLeft, ChevronRight, Send, CalendarDays, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Send, CalendarDays, Clock, CheckCircle, AlertTriangle, X } from 'lucide-react';
 
 function fmt(date: string) {
   return new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -100,6 +100,20 @@ export default function SchedulePage() {
       setFeedback({ msg: data.error || 'Something went wrong', ok: false });
     }
     setSending(false);
+  };
+
+  const unschedule = async (inf: Influencer) => {
+    const res = await fetch(`/api/influencers/${inf.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_scheduled_date: null, schedule_notified_at: null }),
+    });
+    if (res.ok) {
+      setFeedback({ msg: `Removed schedule for ${inf.full_name}.`, ok: true });
+      load();
+    } else {
+      setFeedback({ msg: 'Failed to remove schedule', ok: false });
+    }
   };
 
   const saveDateOnly = async () => {
@@ -240,12 +254,19 @@ export default function SchedulePage() {
               <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Selected Date</p>
               <p className="text-white font-bold text-sm">{fmt(selectedDate)}</p>
               {scheduleMap[selectedDate]?.length > 0 && (
-                <div className="mt-2 space-y-1">
+                <div className="mt-2 space-y-1.5">
                   {scheduleMap[selectedDate].map(inf => (
-                    <div key={inf.id} className="flex items-center gap-2 text-xs text-[#c9a84c]">
-                      <CalendarDays className="w-3 h-3" />
-                      {inf.full_name}
-                      {inf.schedule_notified_at && <CheckCircle className="w-3 h-3 text-emerald-400 ml-auto" />}
+                    <div key={inf.id} className="flex items-center gap-2 text-xs bg-[#111] border border-white/5 rounded-lg px-2.5 py-1.5">
+                      <CalendarDays className="w-3 h-3 text-[#c9a84c] flex-shrink-0" />
+                      <span className="text-[#c9a84c] flex-1 truncate">{inf.full_name}</span>
+                      {inf.schedule_notified_at && <CheckCircle className="w-3 h-3 text-emerald-400 flex-shrink-0" />}
+                      <button
+                        onClick={() => unschedule(inf)}
+                        title="Remove from schedule"
+                        className="ml-1 p-0.5 rounded hover:bg-red-500/20 text-gray-600 hover:text-red-400 transition-colors flex-shrink-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
                     </div>
                   ))}
                   {scheduleMap[selectedDate].length > 1 && (
@@ -353,21 +374,31 @@ export default function SchedulePage() {
                   const hasDate = !!inf.video_scheduled_date;
                   return (
                     <div key={inf.id}
-                      onClick={() => { if (hasDate) setSelectedDate(inf.video_scheduled_date!.slice(0, 10)); }}
-                      className={`rounded-xl border p-3 transition-colors ${hasDate ? 'border-[#c9a84c]/20 bg-[#c9a84c]/5 cursor-pointer hover:border-[#c9a84c]/40' : 'border-white/5 bg-[#111]'}`}>
+                      className={`rounded-xl border p-3 transition-colors ${hasDate ? 'border-[#c9a84c]/20 bg-[#c9a84c]/5' : 'border-white/5 bg-[#111]'}`}>
                       <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1 cursor-pointer" onClick={() => { if (hasDate) setSelectedDate(inf.video_scheduled_date!.slice(0, 10)); }}>
                           <p className="text-white text-xs font-semibold truncate">{inf.full_name}</p>
                           <p className="text-gray-600 text-[10px] truncate">@{inf.instagram_handle}</p>
                         </div>
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
                           {isNotified && <span className="flex items-center gap-0.5 text-[9px] text-emerald-400"><CheckCircle className="w-2.5 h-2.5" /> Notified</span>}
                           {hasDate && !isNotified && <span className="flex items-center gap-0.5 text-[9px] text-[#c9a84c]"><Clock className="w-2.5 h-2.5" /> Saved</span>}
                           {!hasDate && <span className="text-[9px] text-orange-400 font-semibold">Pending</span>}
+                          {hasDate && (
+                            <button
+                              onClick={() => unschedule(inf)}
+                              title="Remove schedule"
+                              className="p-0.5 rounded hover:bg-red-500/20 text-gray-600 hover:text-red-400 transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       </div>
                       {hasDate && (
-                        <p className="text-[10px] text-[#c9a84c] mt-1.5">📅 {fmt(inf.video_scheduled_date!)}</p>
+                        <p className="text-[10px] text-[#c9a84c] mt-1.5 cursor-pointer" onClick={() => setSelectedDate(inf.video_scheduled_date!.slice(0, 10))}>
+                          📅 {fmt(inf.video_scheduled_date!)}
+                        </p>
                       )}
                     </div>
                   );
