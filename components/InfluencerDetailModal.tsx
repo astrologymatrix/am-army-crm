@@ -9,6 +9,7 @@ interface Props {
   onClose: () => void;
   onUpdated: () => void;
   defaultTab?: 'edit' | 'view';
+  fullPage?: boolean;
 }
 
 interface DBProduct { id: string; name: string; price: number; }
@@ -290,7 +291,7 @@ function ViewProfile({ influencer }: { influencer: Influencer }) {
 
 // ─── MAIN MODAL ─────────────────────────────────────────────────────────────
 
-export default function InfluencerDetailModal({ influencer, onClose, onUpdated, defaultTab = 'edit' }: Props) {
+export default function InfluencerDetailModal({ influencer, onClose, onUpdated, defaultTab = 'edit', fullPage = false }: Props) {
   const [tab, setTab] = useState<'edit' | 'view'>(defaultTab);
   const [dbProducts, setDbProducts] = useState<DBProduct[]>([]);
 
@@ -423,12 +424,11 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
     dispatch_status: form.dispatch_status,
   } as any;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto text-gray-900">
+  const inner = (
+    <div className={fullPage ? 'bg-white w-full min-h-screen text-gray-900' : 'bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto text-gray-900'}>
 
         {/* Header */}
-        <div className="flex items-start justify-between p-5 border-b border-gray-100 sticky top-0 bg-white z-10">
+        <div className={`flex items-start justify-between p-5 border-b border-gray-100 bg-white z-10 ${fullPage ? 'sticky top-0 shadow-sm' : 'sticky top-0'}`}>
           <div>
             <h2 className="text-lg font-bold text-gray-900">{form.full_name || influencer.full_name}</h2>
             <p className="text-xs text-gray-500 mt-0.5">
@@ -454,9 +454,11 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
                 {saving ? 'Saving...' : 'Save'}
               </button>
             )}
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
+            {!fullPage && (
+              <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -465,6 +467,7 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
 
         {/* ── EDIT TAB ── */}
         {tab === 'edit' && (
+          <div className={fullPage ? 'max-w-2xl mx-auto px-6' : ''}>
           <div className="p-5 space-y-5 text-gray-900">
 
             {/* Creator info */}
@@ -714,8 +717,15 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
               )}
             </div>
           </div>
+          </div>
         )}
-      </div>
+    </div>
+  );
+
+  if (fullPage) return inner;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      {inner}
     </div>
   );
 }
