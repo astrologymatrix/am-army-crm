@@ -74,17 +74,16 @@ export default function Dashboard() {
       </div>
 
       {/* Stats row 1 — counts */}
-      <div className="grid grid-cols-6 gap-4 mb-4">
+      <div className="grid grid-cols-5 gap-4 mb-4">
         <StatCard label="Total Creators" value={stats.total} sub="AM Army roster" loading={loading} />
         <StatCard label="Agreements Signed" value={stats.signed} sub="Ready for fulfillment" gold loading={loading} />
         <StatCard label="Awaiting Signature" value={stats.awaitingSig} sub="Follow up needed" loading={loading} />
         <StatCard label="Pending Payment" value={stats.pendingPayment} sub="Marked as Pending" gold loading={loading} />
         <StatCard label="Videos to Review" value={stats.videosToReview} sub="Approval queue" loading={loading} />
-        <StatCard label="Live Videos" value={stats.liveVideos} sub="Posted by creators" loading={loading} />
       </div>
 
-      {/* Stats row 2 — payment amounts */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      {/* Stats row 2 — payment amounts + live videos */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-[#1a1a1a] border border-emerald-500/20 rounded-xl p-5 flex items-center gap-5">
           <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
             <span className="text-emerald-400 text-lg">✓</span>
@@ -103,6 +102,16 @@ export default function Dashboard() {
             <p className="text-[10px] font-semibold text-gray-500 tracking-widest uppercase mb-1">Total Amount Pending</p>
             <p className="text-2xl font-light text-orange-400">{loading ? '—' : fmt(stats.totalPending)}</p>
             <p className="text-xs text-gray-600 mt-0.5">{stats.pendingPayment} creators pending</p>
+          </div>
+        </div>
+        <div className="bg-[#1a1a1a] border border-[#c9a84c]/20 rounded-xl p-5 flex items-center gap-5">
+          <div className="w-10 h-10 rounded-full bg-[#c9a84c]/10 flex items-center justify-center flex-shrink-0">
+            <span className="text-[#c9a84c] text-lg">🎬</span>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold text-gray-500 tracking-widest uppercase mb-1">Live Videos</p>
+            <p className="text-2xl font-light text-[#c9a84c]">{loading ? '—' : stats.liveVideos}</p>
+            <p className="text-xs text-gray-600 mt-0.5">Posted by creators</p>
           </div>
         </div>
       </div>
