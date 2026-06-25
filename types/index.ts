@@ -1,7 +1,7 @@
 export type Product = 'Rose Quartz Bracelet' | 'Pyrite Anklet';
 export type AgreementStatus = 'Pending' | 'Sent' | 'Accepted';
 export type VideoStatus = 'Pending' | 'Sent' | 'Approved';
-export type PaymentStatus = 'Pending' | 'Done';
+export type PaymentStatus = 'Pending' | 'Processing' | 'Done';
 
 export interface Influencer {
   id: string;
@@ -20,6 +20,10 @@ export interface Influencer {
   agreement_signed_at: string | null;
   video_status: VideoStatus;
   payment_status: PaymentStatus;
+  upi_id: string | null;
+  bank_details: string | null;
+  payment_scanner_url: string | null;
+  payment_screenshot_url: string | null;
   remarks: string | null;
   created_at: string;
   updated_at: string;

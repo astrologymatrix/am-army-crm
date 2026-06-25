@@ -35,6 +35,7 @@ export default function CreatorsPage() {
   const [productFilter, setProductFilter] = useState('All products');
   const [showAdd, setShowAdd] = useState(false);
   const [selected, setSelected] = useState<Influencer | null>(null);
+  const [selectedTab, setSelectedTab] = useState<'edit' | 'view'>('edit');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -150,9 +151,16 @@ export default function CreatorsPage() {
                       {inf.remarks ? <span className={inf.remarks.toLowerCase().includes('delivered') ? 'text-green-400' : 'text-gray-400'}>{inf.remarks}</span> : <span className="text-gray-700">—</span>}
                     </td>
                     <td className="px-4 py-3">
-                      <button onClick={() => setSelected(inf)} className="text-xs border border-white/10 text-gray-500 hover:text-[#c9a84c] hover:border-[#c9a84c]/30 px-3 py-1 rounded-lg transition-colors whitespace-nowrap">
-                        Edit
-                      </button>
+                      <div className="flex gap-1.5">
+                        <button onClick={() => { setSelectedTab('view'); setSelected(inf); }}
+                          className="text-xs border border-white/10 text-gray-500 hover:text-blue-400 hover:border-blue-400/30 px-3 py-1 rounded-lg transition-colors whitespace-nowrap">
+                          View
+                        </button>
+                        <button onClick={() => { setSelectedTab('edit'); setSelected(inf); }}
+                          className="text-xs border border-white/10 text-gray-500 hover:text-[#c9a84c] hover:border-[#c9a84c]/30 px-3 py-1 rounded-lg transition-colors whitespace-nowrap">
+                          Edit
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -163,7 +171,7 @@ export default function CreatorsPage() {
       </div>
 
       {showAdd && <AddInfluencerModal onClose={() => setShowAdd(false)} onAdded={load} />}
-      {selected && <InfluencerDetailModal influencer={selected} onClose={() => setSelected(null)} onUpdated={() => { load(); setSelected(null); }} />}
+      {selected && <InfluencerDetailModal influencer={selected} onClose={() => setSelected(null)} onUpdated={() => { load(); setSelected(null); }} defaultTab={selectedTab} />}
     </div>
   );
 }

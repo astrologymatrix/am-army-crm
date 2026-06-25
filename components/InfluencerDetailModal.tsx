@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Influencer } from '@/types';
-import { X, Send, Trash2, Copy, ExternalLink, FileText, Save } from 'lucide-react';
+import { X, Send, Trash2, Copy, ExternalLink, FileText, Save, Upload, Eye, Edit3, CheckCircle } from 'lucide-react';
 
 interface Props {
   influencer: Influencer;
   onClose: () => void;
   onUpdated: () => void;
+  defaultTab?: 'edit' | 'view';
 }
 
 interface DBProduct { id: string; name: string; price: number; }
@@ -22,6 +23,7 @@ function Badge({ value }: { value: string }) {
     Accepted: 'bg-green-100 text-green-700 border-green-200',
     Sent: 'bg-blue-100 text-blue-700 border-blue-200',
     Pending: 'bg-orange-100 text-orange-600 border-orange-200',
+    Processing: 'bg-yellow-100 text-yellow-700 border-yellow-200',
     Approved: 'bg-green-100 text-green-700 border-green-200',
     Done: 'bg-emerald-100 text-emerald-700 border-emerald-200',
     Dispatched: 'bg-purple-100 text-purple-700 border-purple-200',
@@ -35,25 +37,203 @@ function Badge({ value }: { value: string }) {
   );
 }
 
-export default function InfluencerDetailModal({ influencer, onClose, onUpdated }: Props) {
+function ImageUpload({
+  label, currentUrl, folder, onUploaded
+}: { label: string; currentUrl: string | null; folder: string; onUploaded: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(currentUrl);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File) => {
+    setUploading(true);
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch(`/api/upload?folder=${folder}`, { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.url) { setPreview(data.url); onUploaded(data.url); }
+    setUploading(false);
+  };
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 mb-1.5">{label}</label>
+      {preview ? (
+        <div className="relative inline-block">
+          <img src={preview} alt={label} className="h-24 w-auto rounded-lg border border-gray-200 object-contain bg-gray-50" />
+          <button onClick={() => inputRef.current?.click()}
+            className="absolute -top-2 -right-2 bg-[#c9a84c] text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-[#b8963e]">
+            ✎
+          </button>
+        </div>
+      ) : (
+        <div onClick={() => inputRef.current?.click()}
+          className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-[#c9a84c]/50 hover:bg-[#fdf8ee]/50 transition-colors">
+          {uploading ? (
+            <div className="flex items-center justify-center gap-2 text-gray-400 text-xs">
+              <div className="w-4 h-4 border-2 border-[#c9a84c] border-t-transparent rounded-full animate-spin" />
+              Uploading...
+            </div>
+          ) : (
+            <>
+              <Upload className="w-5 h-5 text-gray-400 mx-auto mb-1" />
+              <p className="text-xs text-gray-400">Click to upload</p>
+            </>
+          )}
+        </div>
+      )}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+    </div>
+  );
+}
+
+// ─── VIEW PROFILE TAB ───────────────────────────────────────────────────────
+
+function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
+  if (!value) return null;
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{label}</span>
+      <span className="text-sm text-gray-800 font-medium">{value}</span>
+    </div>
+  );
+}
+
+function ViewProfile({ influencer }: { influencer: Influencer }) {
+  const initials = influencer.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const dispatchStatus = (influencer as any).dispatch_status;
+
+  const payStatus = influencer.payment_status;
+  const payColor = payStatus === 'Done' ? 'text-emerald-600' : payStatus === 'Processing' ? 'text-yellow-600' : 'text-orange-500';
+
+  return (
+    <div className="p-5 space-y-5 text-gray-900">
+
+      {/* Avatar + identity */}
+      <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#c9a84c] to-[#8b6914] flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+          {initials}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-xl font-bold text-gray-900">{influencer.full_name}</h3>
+          <p className="text-sm text-[#c9a84c] font-medium">@{influencer.instagram_handle}</p>
+          <p className="text-xs text-gray-500">{Number(influencer.followers || 0).toLocaleString('en-IN')} followers</p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <Badge value={influencer.agreement_status} />
+          {influencer.agreement_signed_at && (
+            <span className="text-[10px] text-green-600">
+              Signed {new Date(influencer.agreement_signed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Contact */}
+      <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">📞 Contact Info</p>
+        <div className="grid grid-cols-2 gap-3">
+          <InfoRow label="Phone" value={influencer.phone} />
+          <InfoRow label="Email" value={influencer.email} />
+          <div className="col-span-2"><InfoRow label="Address" value={influencer.address} /></div>
+        </div>
+      </div>
+
+      {/* Collaboration */}
+      <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">💎 Collaboration</p>
+        <div className="grid grid-cols-2 gap-3">
+          <InfoRow label="Product Assigned" value={influencer.product_assigned} />
+          <InfoRow label="Cash Compensation" value={influencer.payment_amount ? `₹${Number(influencer.payment_amount).toLocaleString('en-IN')}` : null} />
+        </div>
+      </div>
+
+      {/* Status pipeline */}
+      <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">📋 Status</p>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Agreement</span>
+            <Badge value={influencer.agreement_status} />
+          </div>
+          {dispatchStatus && (
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Dispatch</span>
+              <Badge value={dispatchStatus} />
+            </div>
+          )}
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Video</span>
+            <Badge value={influencer.video_status} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Payment</span>
+            <span className={`text-sm font-bold ${payColor}`}>{influencer.payment_status}</span>
+          </div>
+        </div>
+        {influencer.remarks && (
+          <div className="mt-1 bg-white border border-gray-200 rounded-lg px-3 py-2">
+            <p className="text-[10px] text-gray-400 mb-0.5">Remarks</p>
+            <p className="text-sm text-gray-700">{influencer.remarks}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Payment Details */}
+      {(influencer.upi_id || influencer.bank_details || influencer.payment_scanner_url || influencer.payment_screenshot_url) && (
+        <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">💳 Payment Details</p>
+          <div className="space-y-3">
+            <InfoRow label="UPI ID" value={influencer.upi_id} />
+            <InfoRow label="Bank Details" value={influencer.bank_details} />
+            <div className="flex gap-4 mt-2">
+              {influencer.payment_scanner_url && (
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-widest font-semibold">QR / Scanner</p>
+                  <a href={influencer.payment_scanner_url} target="_blank" rel="noreferrer">
+                    <img src={influencer.payment_scanner_url} alt="Payment QR" className="h-28 w-auto rounded-lg border border-gray-200 object-contain bg-white hover:shadow-md transition-shadow" />
+                  </a>
+                </div>
+              )}
+              {influencer.payment_screenshot_url && (
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-widest font-semibold">Payment Proof</p>
+                  <a href={influencer.payment_screenshot_url} target="_blank" rel="noreferrer">
+                    <img src={influencer.payment_screenshot_url} alt="Payment Screenshot" className="h-28 w-auto rounded-lg border border-gray-200 object-contain bg-white hover:shadow-md transition-shadow" />
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MAIN MODAL ─────────────────────────────────────────────────────────────
+
+export default function InfluencerDetailModal({ influencer, onClose, onUpdated, defaultTab = 'edit' }: Props) {
+  const [tab, setTab] = useState<'edit' | 'view'>(defaultTab);
   const [dbProducts, setDbProducts] = useState<DBProduct[]>([]);
 
-  // Local form state — nothing saves until "Save Changes" is clicked
   const [form, setForm] = useState({
-    // Creator info — editable
     full_name: influencer.full_name ?? '',
     email: influencer.email ?? '',
     phone: influencer.phone ?? '',
     instagram_handle: influencer.instagram_handle ?? '',
     followers: influencer.followers ?? 0,
     address: influencer.address ?? '',
-    // Collaboration
     product_assigned: influencer.product_assigned ?? 'Pyrite Anklet',
     payment_amount: influencer.payment_amount ?? 900,
     agreement_status: influencer.agreement_status ?? 'Pending',
     dispatch_status: (influencer as any).dispatch_status ?? '',
     video_status: influencer.video_status ?? 'Pending',
     payment_status: influencer.payment_status ?? 'Pending',
+    upi_id: influencer.upi_id ?? '',
+    bank_details: influencer.bank_details ?? '',
+    payment_scanner_url: influencer.payment_scanner_url ?? '',
+    payment_screenshot_url: influencer.payment_screenshot_url ?? '',
     remarks: influencer.remarks ?? '',
   });
 
@@ -82,7 +262,6 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated }
     setIsDirty(true);
   };
 
-  // Save ALL changes at once
   const saveAll = async () => {
     setSaving(true);
     setError('');
@@ -102,6 +281,10 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated }
         dispatch_status: form.dispatch_status || null,
         video_status: form.video_status,
         payment_status: form.payment_status,
+        upi_id: form.upi_id || null,
+        bank_details: form.bank_details || null,
+        payment_scanner_url: form.payment_scanner_url || null,
+        payment_screenshot_url: form.payment_screenshot_url || null,
         remarks: form.remarks,
       }),
     });
@@ -152,6 +335,13 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated }
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/sign/${influencer.agreement_token}`
     : null;
 
+  // Live influencer object merged with form state for ViewProfile
+  const mergedInfluencer: Influencer = {
+    ...influencer,
+    ...form,
+    dispatch_status: form.dispatch_status,
+  } as any;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto text-gray-900">
@@ -159,17 +349,28 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated }
         {/* Header */}
         <div className="flex items-start justify-between p-5 border-b border-gray-100 sticky top-0 bg-white z-10">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">{influencer.full_name}</h2>
+            <h2 className="text-lg font-bold text-gray-900">{form.full_name || influencer.full_name}</h2>
             <p className="text-xs text-gray-500 mt-0.5">
               @{influencer.instagram_handle} · {Number(influencer.followers || 0).toLocaleString('en-IN')} followers
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {isDirty && (
+            {/* Tab Toggle */}
+            <div className="flex bg-gray-100 rounded-lg p-0.5 text-sm">
+              <button onClick={() => setTab('view')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors ${tab === 'view' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                <Eye className="w-3.5 h-3.5" /> View
+              </button>
+              <button onClick={() => setTab('edit')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors ${tab === 'edit' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                <Edit3 className="w-3.5 h-3.5" /> Edit
+              </button>
+            </div>
+            {tab === 'edit' && isDirty && (
               <button onClick={saveAll} disabled={saving}
                 className="flex items-center gap-1.5 bg-[#c9a84c] hover:bg-[#b8963e] disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">
                 <Save className="w-3.5 h-3.5" />
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? 'Saving...' : 'Save'}
               </button>
             )}
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -178,204 +379,242 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated }
           </div>
         </div>
 
-        <div className="p-5 space-y-5 text-gray-900">
+        {/* ── VIEW TAB ── */}
+        {tab === 'view' && <ViewProfile influencer={mergedInfluencer} />}
 
-          {/* Creator info — all editable */}
-          <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">👤 Creator Info</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Full Name</label>
-                <input value={form.full_name} onChange={e => setField('full_name', e.target.value)}
-                  className={inputCls} placeholder="Full Name" />
+        {/* ── EDIT TAB ── */}
+        {tab === 'edit' && (
+          <div className="p-5 space-y-5 text-gray-900">
+
+            {/* Creator info */}
+            <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">👤 Creator Info</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Full Name</label>
+                  <input value={form.full_name} onChange={e => setField('full_name', e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Phone</label>
+                  <input value={form.phone} onChange={e => setField('phone', e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Email</label>
+                  <input type="text" value={form.email} onChange={e => setField('email', e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Instagram Handle</label>
+                  <div className="flex">
+                    <span className="bg-gray-100 border border-r-0 border-gray-200 rounded-l-lg px-2 py-2 text-xs text-gray-500">@</span>
+                    <input value={form.instagram_handle.replace('@', '')} onChange={e => setField('instagram_handle', e.target.value)}
+                      className="flex-1 border border-gray-200 rounded-r-lg px-3 py-2 text-xs text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#c9a84c]" placeholder="handle" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Followers</label>
+                  <input type="number" value={form.followers} onChange={e => setField('followers', parseInt(e.target.value) || 0)} className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Address</label>
+                  <input value={form.address} onChange={e => setField('address', e.target.value)} className={inputCls} placeholder="Full address" />
+                </div>
               </div>
+              {influencer.agreement_signed_at && (
+                <p className="text-xs text-green-600 font-medium">
+                  ✓ Signed on {new Date(influencer.agreement_signed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              )}
+            </div>
+
+            {/* Agreement */}
+            <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">📄 Agreement</p>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Phone</label>
-                <input value={form.phone} onChange={e => setField('phone', e.target.value)}
-                  className={inputCls} placeholder="Phone" />
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Status</label>
+                <select value={form.agreement_status} onChange={e => setField('agreement_status', e.target.value)} className={selCls}>
+                  <option value="Pending">Pending — not sent yet</option>
+                  <option value="Sent">Sent — awaiting signature</option>
+                  <option value="Accepted">Accepted — signed ✓</option>
+                </select>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Email</label>
-                <input type="text" value={form.email} onChange={e => setField('email', e.target.value)}
-                  className={inputCls} placeholder="Email" />
+              <div className="flex gap-2">
+                <button onClick={sendAgreement} disabled={sending || form.agreement_status === 'Accepted'}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#c9a84c] hover:bg-[#b8963e] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
+                  <Send className="w-4 h-4" />
+                  {sending ? 'Sending...' : form.agreement_status === 'Accepted' ? '✓ Already Signed' : form.agreement_status === 'Sent' ? 'Resend Agreement Email' : 'Send Agreement Email'}
+                </button>
+                {signingLink && (
+                  <>
+                    <a href={signingLink} target="_blank" rel="noreferrer" title="View agreement"
+                      className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:border-[#c9a84c]/50 hover:text-[#c9a84c] px-3 py-2 rounded-xl text-sm transition-colors">
+                      <FileText className="w-4 h-4" /> View
+                    </a>
+                    <button onClick={copyLink} title="Copy signing link"
+                      className="p-2.5 border border-gray-200 text-gray-500 hover:text-[#c9a84c] hover:border-[#c9a84c]/50 rounded-xl transition-colors">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                    <a href={signingLink} target="_blank" rel="noreferrer"
+                      className="p-2.5 border border-gray-200 text-gray-500 hover:text-[#c9a84c] hover:border-[#c9a84c]/50 rounded-xl transition-colors flex items-center">
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </>
+                )}
               </div>
+              {signingLink && (
+                <p className="text-[10px] text-gray-400 font-mono truncate bg-gray-50 px-2 py-1.5 rounded-lg border border-gray-100">
+                  {signingLink}
+                </p>
+              )}
+            </div>
+
+            {/* Product & Payment amount */}
+            <div className="border border-gray-200 rounded-xl p-4 space-y-4">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">💎 Product & Compensation</p>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Instagram Handle</label>
-                <div className="flex">
-                  <span className="bg-gray-100 border border-r-0 border-gray-200 rounded-l-lg px-2 py-2 text-xs text-gray-500">@</span>
-                  <input value={form.instagram_handle.replace('@','')} onChange={e => setField('instagram_handle', e.target.value)}
-                    className="flex-1 border border-gray-200 rounded-r-lg px-3 py-2 text-xs text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#c9a84c]" placeholder="handle" />
+                <label className="block text-xs font-semibold text-gray-600 mb-2">Product Assigned</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {allProducts.map(p => (
+                    <label key={p} onClick={() => setField('product_assigned', p)}
+                      className={`flex items-center gap-2 p-2.5 rounded-xl border-2 cursor-pointer transition-all text-sm ${form.product_assigned === p ? 'border-[#c9a84c] bg-[#fdf8ee]' : 'border-gray-200 hover:border-gray-300'}`}>
+                      <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${form.product_assigned === p ? 'border-[#c9a84c]' : 'border-gray-300'}`}>
+                        {form.product_assigned === p && <div className="w-2 h-2 rounded-full bg-[#c9a84c]" />}
+                      </div>
+                      <span className="text-gray-800 font-medium">{p}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Followers</label>
-                <input type="number" value={form.followers} onChange={e => setField('followers', parseInt(e.target.value)||0)}
-                  className={inputCls} placeholder="Followers" />
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Cash Compensation (₹)</label>
+                <div className="flex gap-2">
+                  {[900, 1000, 1500, 2000].map(amt => (
+                    <button key={amt} type="button" onClick={() => setField('payment_amount', amt)}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium border-2 transition-all ${form.payment_amount === amt ? 'border-[#c9a84c] bg-[#fdf8ee] text-[#c9a84c]' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
+                      ₹{amt.toLocaleString('en-IN')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Details (UPI / Bank / Scanner) */}
+            <div className="border border-[#c9a84c]/30 rounded-xl p-4 space-y-4 bg-[#fdf8ee]/30">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">💳 Payment Details</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">UPI ID</label>
+                  <input value={form.upi_id} onChange={e => setField('upi_id', e.target.value)}
+                    className={inputCls} placeholder="e.g. name@upi" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Bank Details</label>
+                  <textarea value={form.bank_details} onChange={e => setField('bank_details', e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#c9a84c] resize-none"
+                    rows={2} placeholder="Bank Name · Account No · IFSC Code" />
+                </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Address</label>
-                <input value={form.address} onChange={e => setField('address', e.target.value)}
-                  className={inputCls} placeholder="Full address" />
-              </div>
-            </div>
-            {influencer.agreement_signed_at && (
-              <p className="text-xs text-green-600 font-medium">
-                ✓ Signed on {new Date(influencer.agreement_signed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </p>
-            )}
-          </div>
-
-          {/* ── AGREEMENT STATUS ── */}
-          <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">📄 Agreement</p>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Status</label>
-              <select value={form.agreement_status} onChange={e => setField('agreement_status', e.target.value)} className={selCls}>
-                <option value="Pending">Pending — not sent yet</option>
-                <option value="Sent">Sent — awaiting signature</option>
-                <option value="Accepted">Accepted — signed ✓</option>
-              </select>
-              <p className="text-xs text-gray-400 mt-1">
-                Update to <strong>Accepted</strong> manually if creator signed outside the system, or use the button below to send for digital signature.
-              </p>
-            </div>
-
-            {/* Send agreement button */}
-            <div className="flex gap-2">
-              <button onClick={sendAgreement} disabled={sending || form.agreement_status === 'Accepted'}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#c9a84c] hover:bg-[#b8963e] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
-                <Send className="w-4 h-4" />
-                {sending ? 'Sending...' : form.agreement_status === 'Accepted' ? '✓ Already Signed' : form.agreement_status === 'Sent' ? 'Resend Agreement Email' : 'Send Agreement Email'}
-              </button>
-
-              {signingLink && (
-                <>
-                  <a href={signingLink} target="_blank" rel="noreferrer" title="View agreement"
-                    className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:border-[#c9a84c]/50 hover:text-[#c9a84c] px-3 py-2 rounded-xl text-sm transition-colors">
-                    <FileText className="w-4 h-4" /> View
-                  </a>
-                  <button onClick={copyLink} title="Copy signing link"
-                    className="p-2.5 border border-gray-200 text-gray-500 hover:text-[#c9a84c] hover:border-[#c9a84c]/50 rounded-xl transition-colors">
-                    <Copy className="w-4 h-4" />
-                  </button>
-                  <a href={signingLink} target="_blank" rel="noreferrer" title="Open in new tab"
-                    className="p-2.5 border border-gray-200 text-gray-500 hover:text-[#c9a84c] hover:border-[#c9a84c]/50 rounded-xl transition-colors flex items-center">
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                </>
-              )}
-            </div>
-            {signingLink && (
-              <p className="text-[10px] text-gray-400 font-mono truncate bg-gray-50 px-2 py-1.5 rounded-lg border border-gray-100">
-                {signingLink}
-              </p>
-            )}
-          </div>
-
-          {/* ── PRODUCT & PAYMENT ── */}
-          <div className="border border-gray-200 rounded-xl p-4 space-y-4">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">💎 Product & Payment</p>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-2">Product Assigned</label>
-              <div className="grid grid-cols-2 gap-2">
-                {allProducts.map(p => (
-                  <label key={p} onClick={() => setField('product_assigned', p)}
-                    className={`flex items-center gap-2 p-2.5 rounded-xl border-2 cursor-pointer transition-all text-sm ${form.product_assigned === p ? 'border-[#c9a84c] bg-[#fdf8ee]' : 'border-gray-200 hover:border-gray-300'}`}>
-                    <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${form.product_assigned === p ? 'border-[#c9a84c]' : 'border-gray-300'}`}>
-                      {form.product_assigned === p && <div className="w-2 h-2 rounded-full bg-[#c9a84c]" />}
-                    </div>
-                    <span className="text-gray-800 font-medium">{p}</span>
-                  </label>
-                ))}
+                <ImageUpload
+                  label="Upload QR / Payment Scanner"
+                  currentUrl={form.payment_scanner_url || null}
+                  folder="scanners"
+                  onUploaded={url => setField('payment_scanner_url', url)}
+                />
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Cash Compensation (₹)</label>
-              <div className="flex gap-2">
-                {[900, 1000, 1500, 2000].map(amt => (
-                  <button key={amt} type="button" onClick={() => setField('payment_amount', amt)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium border-2 transition-all ${form.payment_amount === amt ? 'border-[#c9a84c] bg-[#fdf8ee] text-[#c9a84c]' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-                    ₹{amt.toLocaleString('en-IN')}
-                  </button>
-                ))}
+            {/* Fulfillment & Video */}
+            <div className="border border-gray-200 rounded-xl p-4 space-y-4">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">📦 Fulfillment & Video</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Dispatch Status</label>
+                  <select value={form.dispatch_status} onChange={e => setField('dispatch_status', e.target.value)} className={selCls}>
+                    <option value="">Not Dispatched</option>
+                    <option value="Dispatched">Dispatched 🚚</option>
+                    <option value="Delivered">Delivered ✓</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Video Status</label>
+                  <select value={form.video_status} onChange={e => setField('video_status', e.target.value)} className={selCls}>
+                    <option value="Pending">Pending</option>
+                    <option value="Sent">Sent by Creator</option>
+                    <option value="Approved">Approved ✓</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Remarks / Notes</label>
+                  <input value={form.remarks} onChange={e => setField('remarks', e.target.value)}
+                    className={inputCls} placeholder="e.g. Successfully Delivered" />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* ── FULFILLMENT ── */}
-          <div className="border border-gray-200 rounded-xl p-4 space-y-4">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">📦 Fulfillment & Video</p>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Dispatch Status</label>
-                <select value={form.dispatch_status} onChange={e => setField('dispatch_status', e.target.value)} className={selCls}>
-                  <option value="">Not Dispatched</option>
-                  <option value="Dispatched">Dispatched 🚚</option>
-                  <option value="Delivered">Delivered ✓</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Video Status</label>
-                <select value={form.video_status} onChange={e => setField('video_status', e.target.value)} className={selCls}>
-                  <option value="Pending">Pending</option>
-                  <option value="Sent">Sent by Creator</option>
-                  <option value="Approved">Approved ✓</option>
-                </select>
-              </div>
-
+            {/* Payment Status + Screenshot */}
+            <div className="border border-gray-200 rounded-xl p-4 space-y-4">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">💰 Payment Status</p>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">Payment Status</label>
                 <select value={form.payment_status} onChange={e => setField('payment_status', e.target.value)} className={selCls}>
-                  <option value="Pending">Pending</option>
-                  <option value="Done">Done ✓</option>
+                  <option value="Pending">Pending — not paid yet</option>
+                  <option value="Processing">Processing — payment initiated</option>
+                  <option value="Done">Done — payment complete ✓</option>
                 </select>
+                {form.payment_status === 'Pending' && (
+                  <p className="text-xs text-orange-500 mt-1 flex items-center gap-1">
+                    ⚠ This creator will appear in Pending Payment on the dashboard
+                  </p>
+                )}
+                {form.payment_status === 'Done' && (
+                  <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Payment complete
+                  </p>
+                )}
               </div>
-
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Remarks / Notes</label>
-                <input value={form.remarks} onChange={e => setField('remarks', e.target.value)}
-                  className={inputCls} placeholder="e.g. Successfully Delivered" />
+                <ImageUpload
+                  label="Upload Payment Screenshot / Proof"
+                  currentUrl={form.payment_screenshot_url || null}
+                  folder="payment-proofs"
+                  onUploaded={url => setField('payment_screenshot_url', url)}
+                />
               </div>
             </div>
-          </div>
 
-          {/* Feedback */}
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">⚠ {error}</div>}
-          {success && <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-lg">✓ {success}</div>}
+            {/* Feedback */}
+            {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">⚠ {error}</div>}
+            {success && <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-lg">✓ {success}</div>}
 
-          {/* Save button (bottom) */}
-          <button onClick={saveAll} disabled={saving || !isDirty}
-            className="w-full flex items-center justify-center gap-2 bg-[#c9a84c] hover:bg-[#b8963e] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-sm transition-colors">
-            <Save className="w-4 h-4" />
-            {saving ? 'Saving...' : isDirty ? 'Save All Changes' : 'No Changes to Save'}
-          </button>
+            {/* Save */}
+            <button onClick={saveAll} disabled={saving || !isDirty}
+              className="w-full flex items-center justify-center gap-2 bg-[#c9a84c] hover:bg-[#b8963e] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-sm transition-colors">
+              <Save className="w-4 h-4" />
+              {saving ? 'Saving...' : isDirty ? 'Save All Changes' : 'No Changes to Save'}
+            </button>
 
-          {/* Delete */}
-          <div className="border-t border-gray-100 pt-4">
-            {!confirmDelete ? (
-              <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-2 text-red-400 hover:text-red-600 text-sm font-medium transition-colors">
-                <Trash2 className="w-4 h-4" /> Remove Creator
-              </button>
-            ) : (
-              <div className="flex items-center gap-3">
-                <p className="text-sm text-red-600 font-medium">Permanently delete this creator?</p>
-                <button onClick={deleteInfluencer} disabled={deleting}
-                  className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors">
-                  {deleting ? 'Deleting...' : 'Yes, Delete'}
+            {/* Delete */}
+            <div className="border-t border-gray-100 pt-4">
+              {!confirmDelete ? (
+                <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-2 text-red-400 hover:text-red-600 text-sm font-medium transition-colors">
+                  <Trash2 className="w-4 h-4" /> Remove Creator
                 </button>
-                <button onClick={() => setConfirmDelete(false)}
-                  className="px-3 py-1.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition-colors">
-                  Cancel
-                </button>
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center gap-3">
+                  <p className="text-sm text-red-600 font-medium">Permanently delete this creator?</p>
+                  <button onClick={deleteInfluencer} disabled={deleting}
+                    className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors">
+                    {deleting ? 'Deleting...' : 'Yes, Delete'}
+                  </button>
+                  <button onClick={() => setConfirmDelete(false)}
+                    className="px-3 py-1.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

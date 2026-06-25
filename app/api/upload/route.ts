@@ -16,6 +16,9 @@ export async function POST(req: NextRequest) {
     const db = getSupabaseAdmin();
     await ensureBucket(db);
 
+    const { searchParams } = new URL(req.url);
+    const folder = searchParams.get('folder') ?? 'products';
+
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
     if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -25,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-    const filename = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const filename = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const { error: uploadError } = await db.storage

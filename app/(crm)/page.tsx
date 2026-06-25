@@ -47,7 +47,7 @@ export default function Dashboard() {
     total: influencers.length,
     signed: influencers.filter(i => i.agreement_status === 'Accepted').length,
     awaitingSig: influencers.filter(i => ['Pending', 'Sent'].includes(i.agreement_status)).length,
-    pendingPayment: influencers.filter(i => i.video_status === 'Approved' && i.payment_status === 'Pending').length,
+    pendingPayment: influencers.filter(i => i.payment_status === 'Pending').length,
     videosToReview: influencers.filter(i => i.video_status === 'Sent').length,
   };
 
