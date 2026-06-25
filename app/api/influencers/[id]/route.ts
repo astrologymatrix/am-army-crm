@@ -3,6 +3,14 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const db = getSupabaseAdmin();
+  const { id } = await params;
+  const { data, error } = await db.from('influencers').select('*').eq('id', id).single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 404 });
+  return NextResponse.json(data);
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const db = getSupabaseAdmin();
   const { id } = await params;
