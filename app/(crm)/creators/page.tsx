@@ -117,49 +117,55 @@ export default function CreatorsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/5">
-                  {['#', 'Full Name', 'Phone', 'Email', 'Instagram', 'Followers', 'Address', 'Agreement', 'Payment', 'Product', 'Video', 'Pay Status', 'Remarks', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  {['#', 'Name', 'Phone', 'Email', 'Instagram', 'Followers', 'Address', 'Agreement', '₹', 'Product', 'Video', 'Pay Status', 'Remarks', ''].map(h => (
+                    <th key={h} className="px-3 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={15} className="text-center py-16 text-gray-600">No creators found</td></tr>
+                  <tr><td colSpan={14} className="text-center py-16 text-gray-600">No creators found</td></tr>
                 ) : filtered.map((inf, idx) => (
                   <tr key={inf.id} className="hover:bg-white/3 transition-colors group">
-                    <td className="px-4 py-3 text-gray-600 text-xs">{idx + 1}</td>
-                    <td className="px-4 py-3">
-                      <button onClick={() => setSelected(inf)} className="text-white font-semibold hover:text-[#c9a84c] transition-colors text-left whitespace-nowrap">
+                    <td className="px-3 py-2.5 text-gray-600 text-xs">{idx + 1}</td>
+                    <td className="px-3 py-2.5 whitespace-nowrap">
+                      <button onClick={() => { setSelectedTab('view'); setSelected(inf); }} className="text-white font-semibold hover:text-[#c9a84c] transition-colors text-left text-sm">
                         {inf.full_name}
                       </button>
                     </td>
-                    <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{inf.phone}</td>
-                    <td className="px-4 py-3 text-gray-400 max-w-[140px] truncate">{inf.email}</td>
-                    <td className="px-4 py-3 text-gray-400 whitespace-nowrap">@{inf.instagram_handle}</td>
-                    <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{inf.followers?.toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-3 text-gray-500 max-w-[120px] truncate text-xs">{inf.address}</td>
-                    <td className="px-4 py-3"><Badge value={inf.agreement_status} type="agreement" /></td>
-                    <td className="px-4 py-3 text-gray-300 whitespace-nowrap">₹{inf.payment_amount?.toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${inf.product_assigned === 'Rose Quartz Bracelet' ? 'bg-pink-900/30 text-pink-400 border-pink-800/30' : 'bg-amber-900/30 text-amber-400 border-amber-800/30'}`}>
-                        {inf.product_assigned === 'Rose Quartz Bracelet' ? 'Rose Quartz' : 'Pyrite Anklet'}
+                    <td className="px-3 py-2.5 text-gray-400 text-xs whitespace-nowrap">{inf.phone}</td>
+                    <td className="px-3 py-2.5 text-gray-400 text-xs max-w-[130px] truncate">{inf.email}</td>
+                    <td className="px-3 py-2.5 text-gray-400 text-xs whitespace-nowrap">@{inf.instagram_handle}</td>
+                    <td className="px-3 py-2.5 text-gray-400 text-xs whitespace-nowrap">{inf.followers?.toLocaleString('en-IN')}</td>
+                    <td className="px-3 py-2.5 text-gray-500 text-xs max-w-[110px] truncate">{inf.address || '—'}</td>
+                    <td className="px-3 py-2.5"><Badge value={inf.agreement_status} type="agreement" /></td>
+                    <td className="px-3 py-2.5 text-gray-300 text-xs whitespace-nowrap">₹{inf.payment_amount?.toLocaleString('en-IN')}</td>
+                    <td className="px-3 py-2.5 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border ${inf.product_assigned === 'Rose Quartz Bracelet' ? 'bg-pink-900/30 text-pink-400 border-pink-800/30' : 'bg-amber-900/30 text-amber-400 border-amber-800/30'}`}>
+                        {inf.product_assigned === 'Rose Quartz Bracelet' ? 'Rose Quartz' : 'Pyrite'}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      {inf.video_status !== 'Pending' ? <Badge value={inf.video_status} type="video" /> : <span className="text-gray-600">—</span>}
+                    <td className="px-3 py-2.5">
+                      {inf.video_status !== 'Pending' ? <Badge value={inf.video_status} type="video" /> : <span className="text-gray-700 text-xs">—</span>}
                     </td>
-                    <td className="px-4 py-3"><Badge value={inf.payment_status} type="payment" /></td>
-                    <td className="px-4 py-3 text-xs text-gray-500 max-w-[120px]">
-                      {inf.remarks ? <span className={inf.remarks.toLowerCase().includes('delivered') ? 'text-green-400' : 'text-gray-400'}>{inf.remarks}</span> : <span className="text-gray-700">—</span>}
+                    <td className="px-3 py-2.5 whitespace-nowrap">
+                      {inf.payment_status === 'Not yet Paid'
+                        ? <span className="text-gray-600 text-xs">—</span>
+                        : <Badge value={inf.payment_status} type="payment" />}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1.5">
+                    <td className="px-3 py-2.5 text-xs max-w-[110px] truncate">
+                      {inf.remarks
+                        ? <span className={inf.remarks.toLowerCase().includes('delivered') ? 'text-green-400' : 'text-gray-400'}>{inf.remarks}</span>
+                        : <span className="text-gray-700">—</span>}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex gap-1">
                         <button onClick={() => { setSelectedTab('view'); setSelected(inf); }}
-                          className="text-xs border border-white/10 text-gray-500 hover:text-blue-400 hover:border-blue-400/30 px-3 py-1 rounded-lg transition-colors whitespace-nowrap">
+                          className="text-[11px] border border-white/10 text-gray-500 hover:text-blue-400 hover:border-blue-400/30 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap">
                           View
                         </button>
                         <button onClick={() => { setSelectedTab('edit'); setSelected(inf); }}
-                          className="text-xs border border-white/10 text-gray-500 hover:text-[#c9a84c] hover:border-[#c9a84c]/30 px-3 py-1 rounded-lg transition-colors whitespace-nowrap">
+                          className="text-[11px] border border-white/10 text-gray-500 hover:text-[#c9a84c] hover:border-[#c9a84c]/30 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap">
                           Edit
                         </button>
                       </div>
