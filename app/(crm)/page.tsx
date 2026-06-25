@@ -3,14 +3,17 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Influencer } from '@/types';
-import { ArrowRight, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 
-interface ActivityItem {
-  id: string;
-  influencer_name: string;
-  action: string;
-  created_at: string;
-}
+const PIPELINE_STAGES = [
+  { key: 'Agreement', color: 'border-orange-500/30 bg-orange-500/5' },
+  { key: 'Ready to Ship', color: 'border-blue-500/30 bg-blue-500/5' },
+  { key: 'In Transit', color: 'border-purple-500/30 bg-purple-500/5' },
+  { key: 'Awaiting Video', color: 'border-yellow-500/30 bg-yellow-500/5' },
+  { key: 'Video Review', color: 'border-pink-500/30 bg-pink-500/5' },
+  { key: 'Pay Creator', color: 'border-[#c9a84c]/30 bg-[#c9a84c]/5' },
+  { key: 'Complete', color: 'border-green-500/30 bg-green-500/5' },
+];
 
 function getPipelineStage(inf: Influencer): string {
   if (inf.payment_status === 'Paid') return 'Complete';
@@ -22,22 +25,16 @@ function getPipelineStage(inf: Influencer): string {
   return 'Agreement';
 }
 
-const STAGES = ['Agreement', 'Ready to Ship', 'In Transit', 'Awaiting Video', 'Video Review', 'Pay Creator', 'Complete'];
+const STAGES = PIPELINE_STAGES.map(s => s.key);
 
 export default function Dashboard() {
   const [influencers, setInfluencers] = useState<Influencer[]>([]);
-  const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const [infRes, actRes] = await Promise.all([
-      fetch('/api/influencers'),
-      fetch('/api/activity'),
-    ]);
-    const infData = await infRes.json();
-    const actData = await actRes.json();
-    setInfluencers(Array.isArray(infData) ? infData : []);
-    setActivity(Array.isArray(actData) ? actData : []);
+    const res = await fetch('/api/influencers');
+    const data = await res.json();
+    setInfluencers(Array.isArray(data) ? data : []);
     setLoading(false);
   }, []);
 
@@ -124,9 +121,9 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Pipeline Snapshot */}
+        {/* Pipeline bar chart */}
         <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-6">
-          <p className="text-xs font-semibold text-[#c9a84c] tracking-widest uppercase mb-4">Pipeline Snapshot</p>
+          <p className="text-xs font-semibold text-[#c9a84c] tracking-widest uppercase mb-4">Pipeline Overview</p>
           <div className="space-y-3">
             {STAGES.map(stage => (
               <div key={stage} className="flex items-center gap-3">
@@ -144,29 +141,36 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* Full Pipeline Kanban */}
       <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-xs font-semibold text-[#c9a84c] tracking-widest uppercase">Recent Activity</p>
-          <Link href="/creators" className="text-xs text-gray-500 hover:text-[#c9a84c] transition-colors flex items-center gap-1">
-            View all <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-        {activity.length === 0 ? (
-          <p className="text-gray-600 text-sm">No activity yet. Start by adding creators!</p>
+        <p className="text-xs font-semibold text-[#c9a84c] tracking-widest uppercase mb-5">Pipeline Board</p>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-2 border-[#c9a84c] border-t-transparent rounded-full animate-spin" />
+          </div>
         ) : (
-          <div className="divide-y divide-white/5">
-            {activity.slice(0, 8).map(item => (
-              <div key={item.id} className="flex items-center justify-between py-3">
-                <p className="text-sm text-gray-300">
-                  <span className="text-white font-medium">{item.influencer_name}</span>
-                  {' — '}{item.action}
-                </p>
-                <p className="text-xs text-gray-600">
-                  {new Date(item.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                </p>
-              </div>
-            ))}
+          <div className="grid grid-cols-4 gap-3 auto-rows-min">
+            {PIPELINE_STAGES.map(({ key, color }) => {
+              const cards = influencers.filter(i => getPipelineStage(i) === key);
+              return (
+                <div key={key} className={`rounded-xl border ${color} p-3`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">{key}</p>
+                    <span className="text-xs font-bold text-[#c9a84c] bg-[#c9a84c]/10 rounded-full px-2 py-0.5">
+                      {cards.length}
+                    </span>
+                  </div>
+                  <div className="space-y-2 min-h-12">
+                    {cards.map(inf => (
+                      <div key={inf.id} className="bg-[#111111] border border-white/5 rounded-lg p-2.5 hover:border-[#c9a84c]/20 transition-colors">
+                        <p className="text-white text-xs font-semibold">{inf.full_name}</p>
+                        <p className="text-gray-600 text-[10px] mt-0.5">@{inf.instagram_handle} · {inf.product_assigned === 'Rose Quartz Bracelet' ? 'Rose Quartz' : 'Pyrite'}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
