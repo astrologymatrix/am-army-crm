@@ -89,7 +89,7 @@ export default function Dashboard() {
           { label: 'TOTAL CREATORS', value: stats.total, sub: 'AM Army roster' },
           { label: 'AGREEMENTS SIGNED', value: stats.signed, sub: 'Ready for fulfillment', gold: true },
           { label: 'AWAITING SIGNATURE', value: stats.awaitingSig, sub: 'Follow up needed' },
-          { label: 'PENDING PAYMENT', value: stats.pendingPayment, sub: 'After video goes live', gold: true },
+          { label: 'PENDING PAYMENT', value: stats.pendingPayment, sub: 'Marked Pending in payment status', gold: true },
           { label: 'VIDEOS TO REVIEW', value: stats.videosToReview, sub: 'Approval queue' },
         ].map(({ label, value, sub, gold }) => (
           <div key={label} className="bg-[#1a1a1a] border border-white/5 rounded-xl p-5">
