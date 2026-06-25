@@ -16,6 +16,8 @@ function Badge({ value, type }: { value: string; type: 'agreement' | 'video' | '
     Pending: 'bg-orange-900/40 text-orange-400 border-orange-800/40',
     Approved: 'bg-green-900/40 text-green-400 border-green-800/40',
     Done: 'bg-emerald-900/40 text-emerald-400 border-emerald-800/40',
+    Paid: 'bg-emerald-900/40 text-emerald-400 border-emerald-800/40',
+    'Not yet Paid': 'bg-gray-800/40 text-gray-500 border-gray-700/40',
     Dispatched: 'bg-purple-900/40 text-purple-400 border-purple-800/40',
     Delivered: 'bg-teal-900/40 text-teal-400 border-teal-800/40',
   };

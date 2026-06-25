@@ -23,7 +23,8 @@ function Badge({ value }: { value: string }) {
     Accepted: 'bg-green-100 text-green-700 border-green-200',
     Sent: 'bg-blue-100 text-blue-700 border-blue-200',
     Pending: 'bg-orange-100 text-orange-600 border-orange-200',
-    Processing: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    'Not yet Paid': 'bg-gray-100 text-gray-500 border-gray-200',
+    Paid: 'bg-emerald-100 text-emerald-700 border-emerald-200',
     Approved: 'bg-green-100 text-green-700 border-green-200',
     Done: 'bg-emerald-100 text-emerald-700 border-emerald-200',
     Dispatched: 'bg-purple-100 text-purple-700 border-purple-200',
@@ -104,7 +105,7 @@ function ViewProfile({ influencer }: { influencer: Influencer }) {
   const dispatchStatus = (influencer as any).dispatch_status;
 
   const payStatus = influencer.payment_status;
-  const payColor = payStatus === 'Done' ? 'text-emerald-600' : payStatus === 'Processing' ? 'text-yellow-600' : 'text-orange-500';
+  const payColor = payStatus === 'Paid' ? 'text-emerald-600' : payStatus === 'Pending' ? 'text-orange-500' : 'text-gray-400';
 
   return (
     <div className="p-5 space-y-5 text-gray-900">
@@ -229,7 +230,7 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
     agreement_status: influencer.agreement_status ?? 'Pending',
     dispatch_status: (influencer as any).dispatch_status ?? '',
     video_status: influencer.video_status ?? 'Pending',
-    payment_status: influencer.payment_status ?? 'Pending',
+    payment_status: influencer.payment_status ?? 'Not yet Paid',
     upi_id: influencer.upi_id ?? '',
     bank_details: influencer.bank_details ?? '',
     payment_scanner_url: influencer.payment_scanner_url ?? '',
@@ -280,7 +281,7 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
         agreement_status: form.agreement_status,
         dispatch_status: form.dispatch_status || null,
         video_status: form.video_status,
-        payment_status: form.payment_status,
+        ...(form.payment_status !== 'Not yet Paid' && { payment_status: form.payment_status }),
         upi_id: form.upi_id || null,
         bank_details: form.bank_details || null,
         payment_scanner_url: form.payment_scanner_url || null,
@@ -557,16 +558,19 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">Payment Status</label>
                 <select value={form.payment_status} onChange={e => setField('payment_status', e.target.value)} className={selCls}>
-                  <option value="Pending">Pending — not paid yet</option>
-                  <option value="Processing">Processing — payment initiated</option>
-                  <option value="Done">Done — payment complete ✓</option>
+                  <option value="Not yet Paid">Not yet Paid — no action taken</option>
+                  <option value="Pending">Pending — payment due, will show on dashboard</option>
+                  <option value="Paid">Paid — payment complete ✓</option>
                 </select>
+                {form.payment_status === 'Not yet Paid' && (
+                  <p className="text-xs text-gray-400 mt-1">Payment status will not be updated when saving.</p>
+                )}
                 {form.payment_status === 'Pending' && (
                   <p className="text-xs text-orange-500 mt-1 flex items-center gap-1">
                     ⚠ This creator will appear in Pending Payment on the dashboard
                   </p>
                 )}
-                {form.payment_status === 'Done' && (
+                {form.payment_status === 'Paid' && (
                   <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
                     <CheckCircle className="w-3 h-3" /> Payment complete
                   </p>

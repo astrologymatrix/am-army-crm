@@ -1,7 +1,7 @@
 export type Product = 'Rose Quartz Bracelet' | 'Pyrite Anklet';
 export type AgreementStatus = 'Pending' | 'Sent' | 'Accepted';
 export type VideoStatus = 'Pending' | 'Sent' | 'Approved';
-export type PaymentStatus = 'Pending' | 'Processing' | 'Done';
+export type PaymentStatus = 'Not yet Paid' | 'Pending' | 'Paid';
 
 export interface Influencer {
   id: string;

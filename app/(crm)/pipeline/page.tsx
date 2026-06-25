@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Influencer } from '@/types';
 
 function getPipelineStage(inf: Influencer): string {
-  if (inf.payment_status === 'Done') return 'Complete';
+  if (inf.payment_status === 'Paid') return 'Complete';
   if (inf.video_status === 'Approved') return 'Pay Creator';
   if (inf.video_status === 'Sent') return 'Video Review';
   if ((inf as any).dispatch_status === 'Delivered') return 'Awaiting Video';
