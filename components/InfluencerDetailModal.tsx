@@ -39,8 +39,8 @@ function Badge({ value }: { value: string }) {
 }
 
 function ImageUpload({
-  label, currentUrl, folder, onUploaded
-}: { label: string; currentUrl: string | null; folder: string; onUploaded: (url: string) => void }) {
+  label, currentUrl, folder, onUploaded, onRemoved
+}: { label: string; currentUrl: string | null; folder: string; onUploaded: (url: string) => void; onRemoved?: () => void }) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentUrl);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,16 +55,29 @@ function ImageUpload({
     setUploading(false);
   };
 
+  const handleRemove = () => {
+    setPreview(null);
+    onRemoved?.();
+  };
+
   return (
     <div>
       <label className="block text-xs font-semibold text-gray-500 mb-1.5">{label}</label>
       {preview ? (
-        <div className="relative inline-block">
-          <img src={preview} alt={label} className="h-24 w-auto rounded-lg border border-gray-200 object-contain bg-gray-50" />
-          <button onClick={() => inputRef.current?.click()}
-            className="absolute -top-2 -right-2 bg-[#c9a84c] text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-[#b8963e]">
-            ✎
-          </button>
+        <div className="flex items-start gap-3">
+          <div className="relative inline-block">
+            <img src={preview} alt={label} className="h-24 w-auto rounded-lg border border-gray-200 object-contain bg-gray-50" />
+            <button onClick={() => inputRef.current?.click()}
+              className="absolute -top-2 -right-2 bg-[#c9a84c] text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-[#b8963e]">
+              ✎
+            </button>
+          </div>
+          {onRemoved && (
+            <button onClick={handleRemove}
+              className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-2 py-1 rounded-lg transition-colors mt-1">
+              <Trash2 className="w-3 h-3" /> Remove
+            </button>
+          )}
         </div>
       ) : (
         <div onClick={() => inputRef.current?.click()}
@@ -616,6 +629,7 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
                   currentUrl={form.payment_screenshot_url || null}
                   folder="payment-proofs"
                   onUploaded={url => setField('payment_screenshot_url', url)}
+                  onRemoved={() => setField('payment_screenshot_url', '')}
                 />
               </div>
             </div>
