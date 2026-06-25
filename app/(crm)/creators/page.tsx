@@ -117,54 +117,57 @@ export default function CreatorsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/5">
-                  {['#', 'Name', 'Phone', 'Email', 'Instagram', 'Followers', 'Agreement', '₹', 'Product', 'Video', 'Pay Status', 'Remarks', ''].map(h => (
-                    <th key={h} className="px-3 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  {['#', 'Name', 'Phone', 'Instagram', 'Flwrs', 'Agreement', '₹', 'Product', 'Video', 'Pay', 'Remarks', ''].map(h => (
+                    <th key={h} className="px-2 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={14} className="text-center py-16 text-gray-600">No creators found</td></tr>
+                  <tr><td colSpan={12} className="text-center py-16 text-gray-600">No creators found</td></tr>
                 ) : filtered.map((inf, idx) => (
                   <tr key={inf.id} className="hover:bg-white/3 transition-colors group">
-                    <td className="px-3 py-2.5 text-gray-600 text-xs">{idx + 1}</td>
-                    <td className="px-3 py-2.5 whitespace-nowrap">
-                      <button onClick={() => { setSelectedTab('view'); setSelected(inf); }} className="text-white font-semibold hover:text-[#c9a84c] transition-colors text-left text-sm">
+                    <td className="px-2 py-2 text-gray-600 text-xs">{idx + 1}</td>
+                    <td className="px-2 py-2 whitespace-nowrap">
+                      <button onClick={() => { setSelectedTab('view'); setSelected(inf); }} className="text-white font-semibold hover:text-[#c9a84c] transition-colors text-left text-xs">
                         {inf.full_name}
                       </button>
                     </td>
-                    <td className="px-3 py-2.5 text-gray-400 text-xs whitespace-nowrap">{inf.phone}</td>
-                    <td className="px-3 py-2.5 text-gray-400 text-xs max-w-[130px] truncate">{inf.email}</td>
-                    <td className="px-3 py-2.5 text-gray-400 text-xs whitespace-nowrap">@{inf.instagram_handle}</td>
-                    <td className="px-3 py-2.5 text-gray-400 text-xs whitespace-nowrap">{inf.followers?.toLocaleString('en-IN')}</td>
-                    <td className="px-3 py-2.5"><Badge value={inf.agreement_status} type="agreement" /></td>
-                    <td className="px-3 py-2.5 text-gray-300 text-xs whitespace-nowrap">₹{inf.payment_amount?.toLocaleString('en-IN')}</td>
-                    <td className="px-3 py-2.5 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border ${inf.product_assigned === 'Rose Quartz Bracelet' ? 'bg-pink-900/30 text-pink-400 border-pink-800/30' : 'bg-amber-900/30 text-amber-400 border-amber-800/30'}`}>
+                    <td className="px-2 py-2 text-gray-400 text-xs whitespace-nowrap">{inf.phone}</td>
+                    <td className="px-2 py-2 text-[#c9a84c] text-xs whitespace-nowrap">
+                      <a href={`https://instagram.com/${inf.instagram_handle.replace('@','')}`} target="_blank" rel="noreferrer" className="hover:underline">
+                        @{inf.instagram_handle}
+                      </a>
+                    </td>
+                    <td className="px-2 py-2 text-gray-400 text-xs whitespace-nowrap">{inf.followers?.toLocaleString('en-IN')}</td>
+                    <td className="px-2 py-2"><Badge value={inf.agreement_status} type="agreement" /></td>
+                    <td className="px-2 py-2 text-gray-300 text-xs whitespace-nowrap">₹{inf.payment_amount?.toLocaleString('en-IN')}</td>
+                    <td className="px-2 py-2 whitespace-nowrap">
+                      <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${inf.product_assigned === 'Rose Quartz Bracelet' ? 'bg-pink-900/30 text-pink-400 border-pink-800/30' : 'bg-amber-900/30 text-amber-400 border-amber-800/30'}`}>
                         {inf.product_assigned === 'Rose Quartz Bracelet' ? 'Rose Quartz' : 'Pyrite'}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="px-2 py-2">
                       {inf.video_status !== 'Pending' ? <Badge value={inf.video_status} type="video" /> : <span className="text-gray-700 text-xs">—</span>}
                     </td>
-                    <td className="px-3 py-2.5 whitespace-nowrap">
+                    <td className="px-2 py-2 whitespace-nowrap">
                       {inf.payment_status === 'Not yet Paid'
                         ? <span className="text-gray-600 text-xs">—</span>
                         : <Badge value={inf.payment_status} type="payment" />}
                     </td>
-                    <td className="px-3 py-2.5 text-xs max-w-[160px]">
+                    <td className="px-2 py-2 text-xs w-[140px]">
                       {inf.remarks
                         ? <span className={`break-words leading-relaxed ${inf.remarks.toLowerCase().includes('delivered') ? 'text-green-400' : 'text-gray-400'}`}>{inf.remarks}</span>
                         : <span className="text-gray-700">—</span>}
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="px-2 py-2">
                       <div className="flex gap-1">
                         <button onClick={() => { setSelectedTab('view'); setSelected(inf); }}
-                          className="text-[11px] border border-white/10 text-gray-500 hover:text-blue-400 hover:border-blue-400/30 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap">
+                          className="text-[10px] border border-white/10 text-gray-500 hover:text-blue-400 hover:border-blue-400/30 px-2 py-0.5 rounded transition-colors whitespace-nowrap">
                           View
                         </button>
                         <button onClick={() => { setSelectedTab('edit'); setSelected(inf); }}
-                          className="text-[11px] border border-white/10 text-gray-500 hover:text-[#c9a84c] hover:border-[#c9a84c]/30 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap">
+                          className="text-[10px] border border-white/10 text-gray-500 hover:text-[#c9a84c] hover:border-[#c9a84c]/30 px-2 py-0.5 rounded transition-colors whitespace-nowrap">
                           Edit
                         </button>
                       </div>
