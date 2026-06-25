@@ -26,6 +26,8 @@ export interface Influencer {
   payment_screenshot_url: string | null;
   video_url: string | null;
   video_posted_at: string | null;
+  video_scheduled_date: string | null;
+  schedule_notified_at: string | null;
   remarks: string | null;
   created_at: string;
   updated_at: string;

@@ -10,6 +10,7 @@ const PIPELINE_STAGES = [
   { key: 'In Transit', color: 'border-purple-500/30 bg-purple-500/5' },
   { key: 'Awaiting Video', color: 'border-yellow-500/30 bg-yellow-500/5' },
   { key: 'Video Review', color: 'border-pink-500/30 bg-pink-500/5' },
+  { key: 'Scheduled to Post', color: 'border-teal-500/30 bg-teal-500/5' },
   { key: 'Pay Creator', color: 'border-[#c9a84c]/30 bg-[#c9a84c]/5' },
   { key: 'Complete', color: 'border-green-500/30 bg-green-500/5' },
 ];
@@ -17,6 +18,7 @@ const PIPELINE_STAGES = [
 function getPipelineStage(inf: Influencer): string {
   if (inf.payment_status === 'Paid') return 'Complete';
   if (inf.video_status === 'Approved') return 'Pay Creator';
+  if (inf.video_status === 'Sent' && inf.video_scheduled_date) return 'Scheduled to Post';
   if (inf.video_status === 'Sent') return 'Video Review';
   if ((inf as any).dispatch_status === 'Delivered') return 'Awaiting Video';
   if ((inf as any).dispatch_status === 'Dispatched') return 'In Transit';
@@ -124,7 +126,7 @@ export default function Dashboard() {
             <div className="w-8 h-8 border-2 border-[#c9a84c] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-3 xl:grid-cols-4">
             {PIPELINE_STAGES.map(({ key, color }) => {
               const cards = influencers.filter(i => getPipelineStage(i) === key);
               return (

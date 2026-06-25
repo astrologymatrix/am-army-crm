@@ -5,12 +5,13 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
-import { LayoutDashboard, Users, FileText, Package, Shield, LogOut, Video } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Package, Shield, LogOut, Video, CalendarDays } from 'lucide-react';
 
 const nav = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/creators', label: 'Creators', icon: Users },
   { href: '/videos', label: 'Live Videos', icon: Video },
+  { href: '/schedule', label: 'Video Schedule', icon: CalendarDays },
   { href: '/agreements', label: 'Agreements', icon: FileText },
   { href: '/products', label: 'Products', icon: Package },
   { href: '/team', label: 'Team Access', icon: Shield },
