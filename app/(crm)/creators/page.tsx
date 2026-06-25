@@ -113,9 +113,9 @@ export default function CreatorsPage() {
             <div className="w-8 h-8 border-2 border-[#c9a84c] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="overflow-x-auto overflow-y-auto" style={{ maxHeight: 'calc(100vh - 260px)' }}>
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 z-10 bg-[#1a1a1a]">
+              <thead>
                 <tr className="border-b border-white/5">
                   {['#', 'Full Name', 'Phone', 'Email', 'Instagram', 'Followers', 'Address', 'Agreement', 'Payment', 'Product', 'Video', 'Pay Status', 'Remarks', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
