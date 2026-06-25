@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
 import { Influencer } from '@/types';
 import { Download } from 'lucide-react';
 
@@ -25,8 +24,6 @@ function getPipelineStage(inf: Influencer): string {
   return 'Agreement';
 }
 
-const STAGES = PIPELINE_STAGES.map(s => s.key);
-
 export default function Dashboard() {
   const [influencers, setInfluencers] = useState<Influencer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,24 +44,6 @@ export default function Dashboard() {
     pendingPayment: influencers.filter(i => i.payment_status === 'Pending').length,
     videosToReview: influencers.filter(i => i.video_status === 'Sent').length,
   };
-
-  const stageCounts = Object.fromEntries(STAGES.map(s => [s, influencers.filter(i => getPipelineStage(i) === s).length]));
-  const maxStageCount = Math.max(...Object.values(stageCounts), 1);
-
-  // Needs action items
-  const needsAction = influencers
-    .filter(i => {
-      const stage = getPipelineStage(i);
-      return ['Agreement', 'Ready to Ship', 'Video Review', 'Pay Creator'].includes(stage);
-    })
-    .map(i => {
-      const stage = getPipelineStage(i);
-      const action =
-        stage === 'Agreement' ? (i.agreement_status === 'Sent' ? 'Edit or resend agreement' : 'Send agreement') :
-        stage === 'Ready to Ship' ? 'Ship product' :
-        stage === 'Video Review' ? 'Review video' : 'Pay creator';
-      return { ...i, action };
-    });
 
   return (
     <div className="p-8">
@@ -96,52 +75,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        {/* Needs Action */}
-        <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-6">
-          <p className="text-xs font-semibold text-[#c9a84c] tracking-widest uppercase mb-4">Needs Action</p>
-          {loading ? (
-            <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-10 bg-white/5 rounded-lg animate-pulse" />)}</div>
-          ) : needsAction.length === 0 ? (
-            <p className="text-gray-600 text-sm">All caught up! ✓</p>
-          ) : (
-            <div className="space-y-3">
-              {needsAction.map(inf => (
-                <div key={inf.id} className="flex items-center justify-between">
-                  <div>
-                    <span className="text-white text-sm font-medium">{inf.full_name}</span>
-                    <span className="text-gray-500 text-sm"> — {(inf as any).action}</span>
-                  </div>
-                  <Link href="/creators" className="text-xs border border-white/20 text-gray-400 hover:text-white hover:border-white/40 px-3 py-1 rounded-lg transition-colors">
-                    Go
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Pipeline bar chart */}
-        <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-6">
-          <p className="text-xs font-semibold text-[#c9a84c] tracking-widest uppercase mb-4">Pipeline Overview</p>
-          <div className="space-y-3">
-            {STAGES.map(stage => (
-              <div key={stage} className="flex items-center gap-3">
-                <p className="text-sm text-gray-400 w-32 flex-shrink-0">{stage}</p>
-                <div className="flex-1 bg-white/5 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="h-full bg-[#c9a84c] rounded-full transition-all"
-                    style={{ width: `${(stageCounts[stage] / maxStageCount) * 100}%` }}
-                  />
-                </div>
-                <p className="text-sm text-gray-400 w-4 text-right">{stageCounts[stage]}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Full Pipeline Kanban */}
+      {/* Pipeline Board */}
       <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-6">
         <p className="text-xs font-semibold text-[#c9a84c] tracking-widest uppercase mb-5">Pipeline Board</p>
         {loading ? (
@@ -149,25 +83,42 @@ export default function Dashboard() {
             <div className="w-8 h-8 border-2 border-[#c9a84c] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-3 auto-rows-min">
+          <div className="grid grid-cols-4 gap-3">
             {PIPELINE_STAGES.map(({ key, color }) => {
               const cards = influencers.filter(i => getPipelineStage(i) === key);
               return (
-                <div key={key} className={`rounded-xl border ${color} p-3`}>
-                  <div className="flex items-center justify-between mb-3">
+                <div key={key} className={`rounded-xl border ${color} p-3 flex flex-col`}>
+                  {/* Column header */}
+                  <div className="flex items-center justify-between mb-3 flex-shrink-0">
                     <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">{key}</p>
                     <span className="text-xs font-bold text-[#c9a84c] bg-[#c9a84c]/10 rounded-full px-2 py-0.5">
                       {cards.length}
                     </span>
                   </div>
-                  <div className="space-y-2 min-h-12">
-                    {cards.map(inf => (
+
+                  {/* Scrollable card list — max 10 visible, then scrolls */}
+                  <div
+                    className="space-y-2 overflow-y-auto pr-0.5"
+                    style={{ maxHeight: cards.length > 10 ? '320px' : 'none' }}
+                  >
+                    {cards.length === 0 ? (
+                      <p className="text-gray-700 text-[11px] text-center py-4">—</p>
+                    ) : cards.map(inf => (
                       <div key={inf.id} className="bg-[#111111] border border-white/5 rounded-lg p-2.5 hover:border-[#c9a84c]/20 transition-colors">
-                        <p className="text-white text-xs font-semibold">{inf.full_name}</p>
-                        <p className="text-gray-600 text-[10px] mt-0.5">@{inf.instagram_handle} · {inf.product_assigned === 'Rose Quartz Bracelet' ? 'Rose Quartz' : 'Pyrite'}</p>
+                        <p className="text-white text-xs font-semibold leading-snug">{inf.full_name}</p>
+                        <p className="text-gray-600 text-[10px] mt-0.5">
+                          @{inf.instagram_handle} · {inf.product_assigned === 'Rose Quartz Bracelet' ? 'Rose Quartz' : 'Pyrite'}
+                        </p>
                       </div>
                     ))}
                   </div>
+
+                  {/* Scroll hint when overflow */}
+                  {cards.length > 10 && (
+                    <p className="text-[10px] text-gray-700 text-center mt-2 flex-shrink-0">
+                      scroll to see all {cards.length}
+                    </p>
+                  )}
                 </div>
               );
             })}
