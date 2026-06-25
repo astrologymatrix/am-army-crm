@@ -36,8 +36,6 @@ export default function VideosPage() {
       return new Date(b.video_posted_at).getTime() - new Date(a.video_posted_at).getTime();
     });
 
-  const totalViews = videos.reduce((s, i) => s + (i.video_views || 0), 0);
-  const totalLikes = videos.reduce((s, i) => s + (i.video_likes || 0), 0);
 
   return (
     <div className="p-8">
@@ -47,19 +45,9 @@ export default function VideosPage() {
           <h1 className="text-2xl font-bold text-white tracking-wide uppercase">Live Videos</h1>
           <p className="text-gray-500 text-sm italic mt-0.5">All posted reels and videos from your creators</p>
         </div>
-        <div className="flex gap-3 text-center">
-          <div className="bg-[#1a1a1a] border border-white/5 rounded-xl px-5 py-3">
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Total Videos</p>
-            <p className="text-2xl font-light text-[#c9a84c]">{loading ? '—' : videos.length}</p>
-          </div>
-          <div className="bg-[#1a1a1a] border border-white/5 rounded-xl px-5 py-3">
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Total Views</p>
-            <p className="text-2xl font-light text-white">{loading ? '—' : totalViews.toLocaleString('en-IN')}</p>
-          </div>
-          <div className="bg-[#1a1a1a] border border-white/5 rounded-xl px-5 py-3">
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Total Likes</p>
-            <p className="text-2xl font-light text-white">{loading ? '—' : totalLikes.toLocaleString('en-IN')}</p>
-          </div>
+        <div className="bg-[#1a1a1a] border border-white/5 rounded-xl px-5 py-3 text-center">
+          <p className="text-[10px] text-gray-500 uppercase tracking-widest">Total Videos</p>
+          <p className="text-2xl font-light text-[#c9a84c]">{loading ? '—' : videos.length}</p>
         </div>
       </div>
 
@@ -144,22 +132,6 @@ export default function VideosPage() {
                   </a>
                 </div>
 
-                {/* Stats */}
-                <div className="flex gap-4 flex-shrink-0">
-                  {[
-                    { label: '👁 Views', value: inf.video_views },
-                    { label: '❤ Likes', value: inf.video_likes },
-                    { label: '💬 Comments', value: inf.video_comments },
-                    { label: '↗ Shares', value: inf.video_shares },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="text-center min-w-[52px]">
-                      <p className="text-[10px] text-gray-600">{label}</p>
-                      <p className="text-sm font-semibold text-white">
-                        {value != null ? Number(value).toLocaleString('en-IN') : <span className="text-gray-700">—</span>}
-                      </p>
-                    </div>
-                  ))}
-                </div>
               </div>
             ))}
           </div>

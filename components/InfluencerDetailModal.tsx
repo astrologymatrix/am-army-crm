@@ -281,25 +281,6 @@ function ViewProfile({ influencer }: { influencer: Influencer }) {
               </span>
             </div>
           )}
-          {(influencer.video_views || influencer.video_likes || influencer.video_comments || influencer.video_shares) ? (
-            <div className="grid grid-cols-4 gap-2 mt-2">
-              {[
-                { label: 'Views', value: influencer.video_views },
-                { label: 'Likes', value: influencer.video_likes },
-                { label: 'Comments', value: influencer.video_comments },
-                { label: 'Shares', value: influencer.video_shares },
-              ].map(({ label, value }) => (
-                <div key={label} className="bg-white border border-gray-200 rounded-lg p-2.5 text-center">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-widest">{label}</p>
-                  <p className="text-base font-bold text-gray-800 mt-0.5">
-                    {value != null ? Number(value).toLocaleString('en-IN') : '—'}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-gray-300 italic">No stats added yet</p>
-          )}
         </div>
       </div>
 
@@ -332,10 +313,6 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
     payment_screenshot_url: influencer.payment_screenshot_url ?? '',
     video_url: influencer.video_url ?? '',
     video_posted_at: influencer.video_posted_at ? influencer.video_posted_at.slice(0, 10) : '',
-    video_views: influencer.video_views ?? '',
-    video_likes: influencer.video_likes ?? '',
-    video_comments: influencer.video_comments ?? '',
-    video_shares: influencer.video_shares ?? '',
     remarks: influencer.remarks ?? '',
   });
 
@@ -389,10 +366,6 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
         payment_screenshot_url: form.payment_screenshot_url || null,
         video_url: form.video_url || null,
         video_posted_at: form.video_posted_at || null,
-        video_views: form.video_views !== '' ? Number(form.video_views) : null,
-        video_likes: form.video_likes !== '' ? Number(form.video_likes) : null,
-        video_comments: form.video_comments !== '' ? Number(form.video_comments) : null,
-        video_shares: form.video_shares !== '' ? Number(form.video_shares) : null,
         remarks: form.remarks,
       }),
     });
@@ -706,23 +679,6 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
                 <label className="block text-xs font-semibold text-gray-500 mb-1">Date Posted</label>
                 <input type="date" value={form.video_posted_at} onChange={e => setField('video_posted_at', e.target.value)}
                   className={inputCls} />
-              </div>
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold pt-1">Video Stats</p>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { key: 'video_views', label: 'Views' },
-                  { key: 'video_likes', label: 'Likes' },
-                  { key: 'video_comments', label: 'Comments' },
-                  { key: 'video_shares', label: 'Shares' },
-                ].map(({ key, label }) => (
-                  <div key={key}>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
-                    <input type="number" min="0"
-                      value={(form as any)[key]}
-                      onChange={e => setField(key, e.target.value)}
-                      className={inputCls} placeholder="0" />
-                  </div>
-                ))}
               </div>
             </div>
 
