@@ -60,7 +60,6 @@ export default function Dashboard() {
       const stage = getPipelineStage(i);
       return ['Agreement', 'Ready to Ship', 'Video Review', 'Pay Creator'].includes(stage);
     })
-    .slice(0, 5)
     .map(i => {
       const stage = getPipelineStage(i);
       const action =
