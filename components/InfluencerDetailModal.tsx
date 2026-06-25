@@ -100,6 +100,10 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
   );
 }
 
+function EmptyVal() {
+  return <span className="text-sm text-gray-300 italic">Not added</span>;
+}
+
 function ViewProfile({ influencer }: { influencer: Influencer }) {
   const initials = influencer.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   const dispatchStatus = (influencer as any).dispatch_status;
@@ -108,7 +112,7 @@ function ViewProfile({ influencer }: { influencer: Influencer }) {
   const payColor = payStatus === 'Paid' ? 'text-emerald-600' : payStatus === 'Pending' ? 'text-orange-500' : 'text-gray-400';
 
   return (
-    <div className="p-5 space-y-5 text-gray-900">
+    <div className="p-5 space-y-4 text-gray-900">
 
       {/* Avatar + identity */}
       <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
@@ -131,83 +135,113 @@ function ViewProfile({ influencer }: { influencer: Influencer }) {
       </div>
 
       {/* Contact */}
-      <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">📞 Contact Info</p>
+      <div className="bg-gray-50 rounded-xl p-4">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">📞 Contact Info</p>
         <div className="grid grid-cols-2 gap-3">
-          <InfoRow label="Phone" value={influencer.phone} />
-          <InfoRow label="Email" value={influencer.email} />
-          <div className="col-span-2"><InfoRow label="Address" value={influencer.address} /></div>
+          <div>
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-0.5">Phone</span>
+            {influencer.phone ? <span className="text-sm text-gray-800 font-medium">{influencer.phone}</span> : <EmptyVal />}
+          </div>
+          <div>
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-0.5">Email</span>
+            {influencer.email ? <span className="text-sm text-gray-800 font-medium">{influencer.email}</span> : <EmptyVal />}
+          </div>
+          <div className="col-span-2">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-0.5">Address</span>
+            {influencer.address ? <span className="text-sm text-gray-800 font-medium">{influencer.address}</span> : <EmptyVal />}
+          </div>
         </div>
       </div>
 
       {/* Collaboration */}
-      <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">💎 Collaboration</p>
+      <div className="bg-gray-50 rounded-xl p-4">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">💎 Collaboration</p>
         <div className="grid grid-cols-2 gap-3">
-          <InfoRow label="Product Assigned" value={influencer.product_assigned} />
-          <InfoRow label="Cash Compensation" value={influencer.payment_amount ? `₹${Number(influencer.payment_amount).toLocaleString('en-IN')}` : null} />
+          <div>
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-0.5">Product Assigned</span>
+            {influencer.product_assigned ? <span className="text-sm text-gray-800 font-medium">{influencer.product_assigned}</span> : <EmptyVal />}
+          </div>
+          <div>
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-0.5">Cash Compensation</span>
+            {influencer.payment_amount ? <span className="text-sm text-gray-800 font-medium">₹{Number(influencer.payment_amount).toLocaleString('en-IN')}</span> : <EmptyVal />}
+          </div>
         </div>
       </div>
 
-      {/* Status pipeline */}
-      <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">📋 Status</p>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Agreement</span>
+      {/* Status */}
+      <div className="bg-gray-50 rounded-xl p-4">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">📋 Status</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-1">Agreement</span>
             <Badge value={influencer.agreement_status} />
           </div>
-          {dispatchStatus && (
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Dispatch</span>
-              <Badge value={dispatchStatus} />
-            </div>
-          )}
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Video</span>
+          <div>
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-1">Dispatch</span>
+            {dispatchStatus ? <Badge value={dispatchStatus} /> : <span className="text-sm text-gray-300 italic">Not dispatched</span>}
+          </div>
+          <div>
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-1">Video</span>
             <Badge value={influencer.video_status} />
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Payment</span>
-            <span className={`text-sm font-bold ${payColor}`}>{influencer.payment_status}</span>
+          <div>
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-1">Payment</span>
+            <span className={`text-sm font-bold ${payColor}`}>{influencer.payment_status || '—'}</span>
           </div>
         </div>
         {influencer.remarks && (
-          <div className="mt-1 bg-white border border-gray-200 rounded-lg px-3 py-2">
+          <div className="mt-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
             <p className="text-[10px] text-gray-400 mb-0.5">Remarks</p>
             <p className="text-sm text-gray-700">{influencer.remarks}</p>
           </div>
         )}
       </div>
 
-      {/* Payment Details */}
-      {(influencer.upi_id || influencer.bank_details || influencer.payment_scanner_url || influencer.payment_screenshot_url) && (
-        <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">💳 Payment Details</p>
-          <div className="space-y-3">
-            <InfoRow label="UPI ID" value={influencer.upi_id} />
-            <InfoRow label="Bank Details" value={influencer.bank_details} />
-            <div className="flex gap-4 mt-2">
-              {influencer.payment_scanner_url && (
-                <div>
-                  <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-widest font-semibold">QR / Scanner</p>
-                  <a href={influencer.payment_scanner_url} target="_blank" rel="noreferrer">
-                    <img src={influencer.payment_scanner_url} alt="Payment QR" className="h-28 w-auto rounded-lg border border-gray-200 object-contain bg-white hover:shadow-md transition-shadow" />
-                  </a>
+      {/* Payment Details — always shown */}
+      <div className="bg-[#fdf8ee]/60 border border-[#c9a84c]/20 rounded-xl p-4">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">💳 Payment Details</p>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-0.5">UPI ID</span>
+              {influencer.upi_id ? <span className="text-sm text-gray-800 font-medium">{influencer.upi_id}</span> : <EmptyVal />}
+            </div>
+            <div className="col-span-2">
+              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-0.5">Bank Details</span>
+              {influencer.bank_details ? <span className="text-sm text-gray-800 font-medium whitespace-pre-line">{influencer.bank_details}</span> : <EmptyVal />}
+            </div>
+          </div>
+
+          {/* QR + Screenshot side by side */}
+          <div className="flex gap-4 mt-1">
+            <div className="flex-1">
+              <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-widest font-semibold">QR / Scanner</p>
+              {influencer.payment_scanner_url ? (
+                <a href={influencer.payment_scanner_url} target="_blank" rel="noreferrer">
+                  <img src={influencer.payment_scanner_url} alt="Payment QR" className="h-32 w-auto rounded-xl border border-gray-200 object-contain bg-white hover:shadow-md transition-shadow" />
+                </a>
+              ) : (
+                <div className="h-32 w-32 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center">
+                  <span className="text-[10px] text-gray-300 text-center px-2">Not uploaded</span>
                 </div>
               )}
-              {influencer.payment_screenshot_url && (
-                <div>
-                  <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-widest font-semibold">Payment Proof</p>
-                  <a href={influencer.payment_screenshot_url} target="_blank" rel="noreferrer">
-                    <img src={influencer.payment_screenshot_url} alt="Payment Screenshot" className="h-28 w-auto rounded-lg border border-gray-200 object-contain bg-white hover:shadow-md transition-shadow" />
-                  </a>
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-widest font-semibold">Payment Screenshot</p>
+              {influencer.payment_screenshot_url ? (
+                <a href={influencer.payment_screenshot_url} target="_blank" rel="noreferrer">
+                  <img src={influencer.payment_screenshot_url} alt="Payment Screenshot" className="h-32 w-auto rounded-xl border border-gray-200 object-contain bg-white hover:shadow-md transition-shadow" />
+                </a>
+              ) : (
+                <div className="h-32 w-32 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center">
+                  <span className="text-[10px] text-gray-300 text-center px-2">Not uploaded</span>
                 </div>
               )}
             </div>
           </div>
         </div>
-      )}
+      </div>
+
     </div>
   );
 }
