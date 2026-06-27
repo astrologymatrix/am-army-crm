@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Influencer, Product } from '@/types';
 import { X, Send } from 'lucide-react';
 import { getAgreementHTML } from '@/lib/agreement';
@@ -11,8 +11,24 @@ interface Props {
   onUpdated: () => void;
 }
 
+const DEFAULT_PRODUCTS = ['Rose Quartz Bracelet', 'Pyrite Anklet'];
+
 export default function AgreementEditModal({ influencer, onClose, onUpdated }: Props) {
   const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  const [dbProducts, setDbProducts] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then(r => r.json())
+      .then(d => {
+        if (Array.isArray(d)) {
+          const names = d.map((p: { name: string }) => p.name).filter((n: string) => !DEFAULT_PRODUCTS.includes(n));
+          setDbProducts(names);
+        }
+      });
+  }, []);
+
+  const allProducts = [...DEFAULT_PRODUCTS, ...dbProducts];
 
   const [form, setForm] = useState({
     full_name: influencer.full_name,
@@ -145,8 +161,7 @@ export default function AgreementEditModal({ influencer, onClose, onUpdated }: P
                 <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-1">Product</label>
                 <select value={form.product_assigned} onChange={e => set('product_assigned', e.target.value)}
                   className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-[#c9a84c]/50 cursor-pointer">
-                  <option>Rose Quartz Bracelet</option>
-                  <option>Pyrite Anklet</option>
+                  {allProducts.map(p => <option key={p}>{p}</option>)}
                 </select>
               </div>
               <div>

@@ -223,9 +223,16 @@ export default function SchedulePage() {
                   )}
                   <div className="space-y-0.5">
                     {creators.slice(0, 2).map(inf => (
-                      <div key={inf.id}
-                        className="text-[9px] leading-tight px-1 py-0.5 rounded bg-[#c9a84c]/20 text-[#c9a84c] font-medium truncate">
-                        {inf.full_name.split(' ')[0]}
+                      <div key={inf.id} className="flex items-center gap-0.5 group/chip">
+                        <span className="text-[9px] leading-tight px-1 py-0.5 rounded bg-[#c9a84c]/20 text-[#c9a84c] font-medium truncate flex-1 min-w-0">
+                          {inf.full_name.split(' ')[0]}
+                        </span>
+                        <button
+                          onClick={e => { e.stopPropagation(); unschedule(inf); }}
+                          className="hidden group-hover/chip:flex items-center justify-center w-3.5 h-3.5 rounded bg-red-500/80 text-white flex-shrink-0"
+                        >
+                          <X className="w-2 h-2" />
+                        </button>
                       </div>
                     ))}
                     {creators.length > 2 && (
