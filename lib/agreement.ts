@@ -48,9 +48,6 @@ export function getAgreementHTML({
     : paymentAmount === 2000 ? 'Two Thousand'
     : `${paymentAmount}`;
 
-  const isRoseQuartz = product === 'Rose Quartz Bracelet';
-  const roseBox = isRoseQuartz ? '☑' : '☐';
-  const pyriteBox = !isRoseQuartz ? '☑' : '☐';
 
   const creatorFirstName = creatorName.split(' ')[0];
   const sigBlock = signedName
@@ -133,7 +130,7 @@ export function getAgreementHTML({
       ['Creator Instagram Handle', handle],
       ['Creator Contact (Mobile)', phone],
       ['Creator Email', email],
-      ['Product Assigned', `${roseBox} Rose Quartz Bracelet &nbsp;&nbsp; or &nbsp;&nbsp; ${pyriteBox} Pyrite Anklet`],
+      ['Product Assigned', `<strong>${product}</strong>`],
     ].map(([label, value]) => `
       <tr>
         <td style="padding:6px 10px;border:1px solid #d1d5db;background:#f9f6f0;width:38%;font-weight:600;color:#6d28a7;">${label}</td>
@@ -156,7 +153,7 @@ export function getAgreementHTML({
   ${sectionTitle('2', 'COMPENSATION & PRODUCT')}
   ${subTitle('In consideration of the Creator fulfilling their obligations, the Brand agrees to provide:')}
   <ul>
-    ${bullet(`<strong>Free Product:</strong> One (1) Astrology Matrix crystal product as specified above — either a Rose Quartz Bracelet or Pyrite Anklet — shipped at the Brand's cost to the Creator's address`)}
+    ${bullet(`<strong>Free Product:</strong> One (1) Astrology Matrix crystal product as specified above — <strong>${product}</strong> — shipped at the Brand's cost to the Creator's address`)}
     ${bullet(`<strong>Cash Compensation:</strong> INR ${paymentAmount} (Rupees ${amountWords} Only) to be paid via UPI/bank transfer within 24 hours of the Creator sharing the live Reel link with the Brand`)}
   </ul>
 
