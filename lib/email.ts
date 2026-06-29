@@ -1,10 +1,12 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.zoho.in',
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
+    user: process.env.ZOHO_USER,
+    pass: process.env.ZOHO_PASSWORD,
   },
 });
 
@@ -82,7 +84,7 @@ export async function sendScheduleEmail({
 </html>`;
 
   await transporter.sendMail({
-    from: `"Astrology Matrix" <${process.env.GMAIL_USER}>`,
+    from: `"Astrology Matrix" <${process.env.ZOHO_USER}>`,
     to,
     subject: `📅 Your Video Post Date — ${formatted}`,
     html,
@@ -158,7 +160,7 @@ export async function sendAgreementEmail({
   `;
 
   await transporter.sendMail({
-    from: `"Astrology Matrix" <${process.env.GMAIL_USER}>`,
+    from: `"Astrology Matrix" <${process.env.ZOHO_USER}>`,
     to,
     subject: `🔮 Your Creator Agreement — Astrology Matrix × ${creatorName}`,
     html,
