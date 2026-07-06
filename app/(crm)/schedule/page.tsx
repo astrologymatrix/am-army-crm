@@ -222,19 +222,23 @@ export default function SchedulePage() {
                     </span>
                   )}
                   <div className="space-y-0.5">
-                    {creators.slice(0, 2).map(inf => (
-                      <div key={inf.id} className="flex items-center gap-0.5 group/chip">
-                        <span className="text-[9px] leading-tight px-1 py-0.5 rounded bg-[#c9a84c]/20 text-[#c9a84c] font-medium truncate flex-1 min-w-0">
-                          {inf.full_name.split(' ')[0]}
-                        </span>
-                        <button
-                          onClick={e => { e.stopPropagation(); unschedule(inf); }}
-                          className="hidden group-hover/chip:flex items-center justify-center w-3.5 h-3.5 rounded bg-red-500/80 text-white flex-shrink-0"
-                        >
-                          <X className="w-2 h-2" />
-                        </button>
-                      </div>
-                    ))}
+                    {creators.slice(0, 2).map(inf => {
+                      const isLive = !!inf.video_url;
+                      return (
+                        <div key={inf.id} className="flex items-center gap-0.5 group/chip">
+                          <span className={`text-[9px] leading-tight px-1 py-0.5 rounded font-medium truncate flex-1 min-w-0 flex items-center gap-0.5 ${isLive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#c9a84c]/20 text-[#c9a84c]'}`}>
+                            {isLive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0 animate-pulse" />}
+                            {inf.full_name.split(' ')[0]}
+                          </span>
+                          <button
+                            onClick={e => { e.stopPropagation(); unschedule(inf); }}
+                            className="hidden group-hover/chip:flex items-center justify-center w-3.5 h-3.5 rounded bg-red-500/80 text-white flex-shrink-0"
+                          >
+                            <X className="w-2 h-2" />
+                          </button>
+                        </div>
+                      );
+                    })}
                     {creators.length > 2 && (
                       <div className="text-[9px] text-gray-500 px-1">+{creators.length - 2} more</div>
                     )}
@@ -247,6 +251,7 @@ export default function SchedulePage() {
           {/* Legend */}
           <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/5 text-[10px] text-gray-600">
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-[#c9a84c]/20 inline-block border border-[#c9a84c]/40" /> Scheduled</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-emerald-500/20 inline-block border border-emerald-500/40" /> Live</span>
             <span className="flex items-center gap-1.5"><AlertTriangle className="w-3 h-3 text-orange-400" /> Same-day conflict</span>
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-blue-500/20 inline-block border border-blue-500/40" /> Today</span>
           </div>
@@ -262,20 +267,27 @@ export default function SchedulePage() {
               <p className="text-white font-bold text-sm">{fmt(selectedDate)}</p>
               {scheduleMap[selectedDate]?.length > 0 && (
                 <div className="mt-2 space-y-1.5">
-                  {scheduleMap[selectedDate].map(inf => (
-                    <div key={inf.id} className="flex items-center gap-2 text-xs bg-[#111] border border-white/5 rounded-lg px-2.5 py-1.5">
-                      <CalendarDays className="w-3 h-3 text-[#c9a84c] flex-shrink-0" />
-                      <span className="text-[#c9a84c] flex-1 truncate">{inf.full_name}</span>
-                      {inf.schedule_notified_at && <CheckCircle className="w-3 h-3 text-emerald-400 flex-shrink-0" />}
-                      <button
-                        onClick={() => unschedule(inf)}
-                        title="Remove from schedule"
-                        className="ml-1 p-0.5 rounded hover:bg-red-500/20 text-gray-600 hover:text-red-400 transition-colors flex-shrink-0"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
+                  {scheduleMap[selectedDate].map(inf => {
+                    const isLive = !!inf.video_url;
+                    return (
+                      <div key={inf.id} className={`flex items-center gap-2 text-xs bg-[#111] border rounded-lg px-2.5 py-1.5 ${isLive ? 'border-emerald-500/30' : 'border-white/5'}`}>
+                        <CalendarDays className={`w-3 h-3 flex-shrink-0 ${isLive ? 'text-emerald-400' : 'text-[#c9a84c]'}`} />
+                        <span className={`flex-1 truncate font-medium ${isLive ? 'text-emerald-400' : 'text-[#c9a84c]'}`}>{inf.full_name}</span>
+                        {isLive && (
+                          <span className="flex items-center gap-1 text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />LIVE
+                          </span>
+                        )}
+                        {!isLive && inf.schedule_notified_at && <CheckCircle className="w-3 h-3 text-emerald-400 flex-shrink-0" />}
+                        <button
+                          onClick={() => unschedule(inf)}
+                          className="ml-1 p-0.5 rounded hover:bg-red-500/20 text-gray-600 hover:text-red-400 transition-colors flex-shrink-0"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
                   {scheduleMap[selectedDate].length > 1 && (
                     <p className="text-[10px] text-orange-400 flex items-center gap-1 mt-1">
                       <AlertTriangle className="w-3 h-3" /> Multiple creators on same day
@@ -381,7 +393,7 @@ export default function SchedulePage() {
                   const hasDate = !!inf.video_scheduled_date;
                   return (
                     <div key={inf.id}
-                      className={`rounded-xl border p-3 transition-colors ${hasDate ? 'border-[#c9a84c]/20 bg-[#c9a84c]/5' : 'border-white/5 bg-[#111]'}`}>
+                      className={`rounded-xl border p-3 transition-colors ${inf.video_url && hasDate ? 'border-emerald-500/30 bg-emerald-500/5' : hasDate ? 'border-[#c9a84c]/20 bg-[#c9a84c]/5' : 'border-white/5 bg-[#111]'}`}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1 cursor-pointer" onClick={() => { if (hasDate) setSelectedDate(inf.video_scheduled_date!.slice(0, 10)); }}>
                           <p className="text-white text-xs font-semibold truncate">{inf.full_name}</p>
@@ -403,9 +415,16 @@ export default function SchedulePage() {
                         </div>
                       </div>
                       {hasDate && (
-                        <p className="text-[10px] text-[#c9a84c] mt-1.5 cursor-pointer" onClick={() => setSelectedDate(inf.video_scheduled_date!.slice(0, 10))}>
-                          📅 {fmt(inf.video_scheduled_date!)}
-                        </p>
+                        <div className="flex items-center gap-2 mt-1.5 cursor-pointer" onClick={() => setSelectedDate(inf.video_scheduled_date!.slice(0, 10))}>
+                          <p className={`text-[10px] ${inf.video_url ? 'text-emerald-400' : 'text-[#c9a84c]'}`}>
+                            📅 {fmt(inf.video_scheduled_date!)}
+                          </p>
+                          {inf.video_url && (
+                            <span className="flex items-center gap-1 text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />LIVE
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   );
