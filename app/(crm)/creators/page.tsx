@@ -7,7 +7,18 @@ import InfluencerDetailModal from '@/components/InfluencerDetailModal';
 import { Plus, Search, Download, ChevronDown } from 'lucide-react';
 
 const AGREEMENT_FILTERS = ['All agreement statuses', 'Pending', 'Sent', 'Accepted'];
-const PRODUCT_FILTERS = ['All products', 'Rose Quartz Bracelet', 'Pyrite Anklet'];
+
+function productBadgeColor(product: string | null) {
+  if (product === 'Rose Quartz Bracelet') return 'bg-pink-900/30 text-pink-400 border-pink-800/30';
+  if (product === 'Pyrite Anklet') return 'bg-amber-900/30 text-amber-400 border-amber-800/30';
+  return 'bg-violet-900/30 text-violet-400 border-violet-800/30';
+}
+
+function productShortName(product: string | null) {
+  if (!product) return '—';
+  // First two words max to keep badge compact
+  return product.split(' ').slice(0, 2).join(' ');
+}
 
 function Badge({ value, type }: { value: string; type: 'agreement' | 'video' | 'payment' | 'dispatch' }) {
   const map: Record<string, string> = {
@@ -38,6 +49,13 @@ export default function CreatorsPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [selected, setSelected] = useState<Influencer | null>(null);
   const [selectedTab, setSelectedTab] = useState<'edit' | 'view'>('edit');
+  const [allProducts, setAllProducts] = useState<string[]>(['Rose Quartz Bracelet', 'Pyrite Anklet']);
+
+  useEffect(() => {
+    fetch('/api/products').then(r => r.json()).then(d => {
+      if (Array.isArray(d)) setAllProducts(d.map((p: { name: string }) => p.name));
+    });
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -100,7 +118,8 @@ export default function CreatorsPage() {
         <div className="relative">
           <select value={productFilter} onChange={e => setProductFilter(e.target.value)}
             className="appearance-none bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 pr-8 text-sm text-gray-300 focus:outline-none focus:border-[#c9a84c]/50 cursor-pointer">
-            {PRODUCT_FILTERS.map(f => <option key={f}>{f}</option>)}
+            <option>All products</option>
+            {allProducts.map(p => <option key={p}>{p}</option>)}
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500 pointer-events-none" />
         </div>
@@ -143,8 +162,8 @@ export default function CreatorsPage() {
                     <td className="px-2 py-2"><Badge value={inf.agreement_status} type="agreement" /></td>
                     <td className="px-2 py-2 text-gray-300 text-xs whitespace-nowrap">₹{inf.payment_amount?.toLocaleString('en-IN')}</td>
                     <td className="px-2 py-2 whitespace-nowrap">
-                      <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${inf.product_assigned === 'Rose Quartz Bracelet' ? 'bg-pink-900/30 text-pink-400 border-pink-800/30' : 'bg-amber-900/30 text-amber-400 border-amber-800/30'}`}>
-                        {inf.product_assigned === 'Rose Quartz Bracelet' ? 'Rose Quartz' : 'Pyrite'}
+                      <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${productBadgeColor(inf.product_assigned)}`}>
+                        {productShortName(inf.product_assigned)}
                       </span>
                     </td>
                     <td className="px-2 py-2">

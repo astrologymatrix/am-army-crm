@@ -148,7 +148,7 @@ export default function Dashboard() {
                         className="block bg-[#111111] border border-white/5 rounded-lg p-2.5 hover:border-[#c9a84c]/40 hover:bg-[#c9a84c]/5 transition-colors cursor-pointer group/card">
                         <p className="text-white text-xs font-semibold leading-snug group-hover/card:text-[#c9a84c] transition-colors">{inf.full_name}</p>
                         <p className="text-gray-600 text-[10px] mt-0.5">
-                          @{inf.instagram_handle} · {inf.product_assigned === 'Rose Quartz Bracelet' ? 'Rose Quartz' : 'Pyrite'}
+                          @{inf.instagram_handle} · {inf.product_assigned?.split(' ').slice(0, 2).join(' ') ?? '—'}
                         </p>
                       </a>
                     ))}

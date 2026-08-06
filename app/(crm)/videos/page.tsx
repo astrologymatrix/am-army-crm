@@ -107,8 +107,12 @@ export default function VideosPage() {
 
                 {/* Product */}
                 <div className="w-28 flex-shrink-0">
-                  <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border ${inf.product_assigned === 'Rose Quartz Bracelet' ? 'bg-pink-900/30 text-pink-400 border-pink-800/30' : 'bg-amber-900/30 text-amber-400 border-amber-800/30'}`}>
-                    {inf.product_assigned === 'Rose Quartz Bracelet' ? 'Rose Quartz' : 'Pyrite Anklet'}
+                  <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                    inf.product_assigned === 'Rose Quartz Bracelet' ? 'bg-pink-900/30 text-pink-400 border-pink-800/30'
+                    : inf.product_assigned === 'Pyrite Anklet' ? 'bg-amber-900/30 text-amber-400 border-amber-800/30'
+                    : 'bg-violet-900/30 text-violet-400 border-violet-800/30'
+                  }`}>
+                    {inf.product_assigned || '—'}
                   </span>
                 </div>
 
