@@ -370,12 +370,34 @@ export default function InfluencerDetailModal({ influencer, onClose, onUpdated, 
         remarks: form.remarks,
       }),
     });
+    const data = await res.json();
     if (res.ok) {
+      // Re-sync form from actual DB response so what's shown always matches what's saved
+      setForm({
+        full_name: data.full_name ?? '',
+        email: data.email ?? '',
+        phone: data.phone ?? '',
+        instagram_handle: data.instagram_handle ?? '',
+        followers: data.followers ?? 0,
+        address: data.address ?? '',
+        product_assigned: data.product_assigned ?? 'Pyrite Anklet',
+        payment_amount: data.payment_amount ?? 900,
+        agreement_status: data.agreement_status ?? 'Pending',
+        dispatch_status: data.dispatch_status ?? '',
+        video_status: data.video_status ?? 'Pending',
+        payment_status: data.payment_status ?? 'Not yet Paid',
+        upi_id: data.upi_id ?? '',
+        bank_details: data.bank_details ?? '',
+        payment_scanner_url: data.payment_scanner_url ?? '',
+        payment_screenshot_url: data.payment_screenshot_url ?? '',
+        video_url: data.video_url ?? '',
+        video_posted_at: data.video_posted_at ? data.video_posted_at.slice(0, 10) : '',
+        remarks: data.remarks ?? '',
+      });
       setIsDirty(false);
       onUpdated();
       notify('All changes saved!');
     } else {
-      const data = await res.json();
       notify(data.error || 'Save failed', true);
     }
     setSaving(false);
