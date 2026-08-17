@@ -52,13 +52,21 @@ export default function AgreementEditModal({ influencer, onClose, onUpdated }: P
   const set = (k: string, v: string | number) => setForm(f => ({ ...f, [k]: v }));
 
   const printPDF = () => {
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><title>Agreement — ${form.full_name}</title>
-      <style>@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style>
-    </head><body>${previewHTML}</body></html>`);
-    win.document.close();
-    win.onload = () => { win.focus(); win.print(); };
+    const params = new URLSearchParams({
+      full_name: form.full_name,
+      instagram_handle: form.instagram_handle,
+      phone: form.phone,
+      email: form.email,
+      product: form.product_assigned,
+      payment_amount: String(form.payment_amount),
+      agreementDate: form.agreementDate,
+      postDays: String(form.postDays),
+      reelMinSec: String(form.reelMinSec),
+      reelMaxSec: String(form.reelMaxSec),
+      reelLiveDays: String(form.reelLiveDays),
+      nonCompeteDays: String(form.nonCompeteDays),
+    });
+    window.open(`/api/agreement-print/${influencer.id}?${params}`, '_blank');
   };
 
   const saveDraft = async () => {
