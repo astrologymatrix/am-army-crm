@@ -51,6 +51,16 @@ export default function AgreementEditModal({ influencer, onClose, onUpdated }: P
 
   const set = (k: string, v: string | number) => setForm(f => ({ ...f, [k]: v }));
 
+  const printPDF = () => {
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(`<!DOCTYPE html><html><head><title>Agreement — ${form.full_name}</title>
+      <style>@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style>
+    </head><body>${previewHTML}</body></html>`);
+    win.document.close();
+    win.onload = () => { win.focus(); win.print(); };
+  };
+
   const saveDraft = async () => {
     setSending(true);
     setError('');
@@ -222,7 +232,7 @@ export default function AgreementEditModal({ influencer, onClose, onUpdated }: P
           </div>
           <div className="flex gap-3">
             <button onClick={onClose} className="border border-white/10 text-gray-400 px-5 py-2.5 rounded-xl text-sm hover:bg-white/5 transition-colors">Close</button>
-            <button onClick={() => window.print()} className="border border-white/10 text-gray-300 px-5 py-2.5 rounded-xl text-sm hover:bg-white/5 transition-colors">Print / PDF</button>
+            <button onClick={printPDF} className="border border-white/10 text-gray-300 px-5 py-2.5 rounded-xl text-sm hover:bg-white/5 transition-colors">Print / PDF</button>
             <button onClick={saveDraft} disabled={sending}
               className="border border-[#c9a84c]/40 text-[#c9a84c] px-5 py-2.5 rounded-xl text-sm hover:bg-[#c9a84c]/10 transition-colors disabled:opacity-50">
               {sending ? 'Saving...' : 'Save Draft'}
