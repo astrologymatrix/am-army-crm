@@ -89,6 +89,7 @@ export function getAgreementHTML({
 
   return `
 <style>
+  @page { size: A4; margin: 0; }
   .ag-page {
     width: 210mm;
     min-height: 297mm;
@@ -99,14 +100,23 @@ export function getAgreementHTML({
     margin: 0 auto 24px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     font-family: 'Times New Roman', Times, Georgia, serif;
-    page-break-after: always;
   }
   @media print {
+    html, body { margin: 0 !important; padding: 0 !important; height: auto !important; background: white !important; }
     .ag-page {
-      margin: 0;
-      box-shadow: none;
-      width: 100%;
-      min-height: 100vh;
+      margin: 0 !important;
+      box-shadow: none !important;
+      width: 210mm !important;
+      height: 297mm !important;
+      min-height: unset !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+      page-break-after: always;
+      break-after: page;
+    }
+    .ag-page:last-child {
+      page-break-after: avoid !important;
+      break-after: avoid !important;
     }
   }
   .ag-page ul { padding-left: 18px; margin: 6px 0 10px; }

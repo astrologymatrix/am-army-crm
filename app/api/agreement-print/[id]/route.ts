@@ -41,7 +41,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   <title>Agreement — ${inf.full_name}</title>
   <style>
     @media print {
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0 !important; padding: 0 !important; background: white !important; }
       .no-print { display: none !important; }
     }
     .print-bar {
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
     .btn-print { background: #c9a84c; color: #000; }
     .btn-close { background: transparent; color: #888; border: 1px solid #444 !important; }
-    body { padding-bottom: 70px; }
+    body { padding-bottom: 70px; background: #111; }
   </style>
 </head>
 <body>
